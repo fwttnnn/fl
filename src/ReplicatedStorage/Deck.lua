@@ -49,6 +49,7 @@ function Deck:Resize()
     end
 
     self.Part.Size = Vector3.new(self.Part.Size.X, (#self.Cards * self:top().Part.Size.Y), self.Part.Size.Z)
+    -- TODO: not actually on center, calculate the center from the top and bottom pos instead.
     self.Part.Position = self.Cards[math.floor(#self.Cards / 2 + 1)].Part.Position
 end
 
@@ -64,6 +65,7 @@ function Deck:push(card: Card)
 
     card.Part.Parent = self.Part
     card:setTransparency(0)
+    card.Part.face.Transparency = 1
 
     table.insert(self.Cards, card)
 
