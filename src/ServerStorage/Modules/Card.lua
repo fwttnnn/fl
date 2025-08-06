@@ -21,11 +21,14 @@ end
 Rank["J"] = 11
 Rank["Q"] = 12
 Rank["K"] = 13
-Rank["A"] = 14 -- NOTE: this can be either 14 or 1, this value will always be 14.
+Rank["A"] = 14 -- NOTE: this can be either 14 or 1, the default value will be 14.
 
-function Card.new(rank: Rank, suit: Suit)
+function Card.new(rank: Rank, suit: Suit, ace: number?)
     assert(Rank[rank])
     assert(Suit[suit])
+    assert(not ace or ace == 1 or ace == 14)
+
+    ace = ace or Rank["A"]
 
     -- TODO: CURRENTLY, HAND CAN COPY ITSELF, WHICH CLONES A NEW CARD PART.
     -- INSTEAD, IT SHOULDN'T CLONE A NEW CARD PART.
@@ -40,15 +43,23 @@ function Card.new(rank: Rank, suit: Suit)
         Part = part,
         Rank = rank,
         Suit = suit,
+        Ace = ace
     }, Card)
 end
 
-function Card:RankNumerical(ace: number?): number
-    assert(not ace or ace == 1 or ace == Rank["A"])
-    ace = ace or Rank["A"]
+-- NOTE: without cloning a new card part
+function Card:Copy(): Card
+    return setmetatable({
+        Part = self.Part,
+        Rank = self.Rank,
+        Suit = self.Suit,
+        Ace = self.Ace
+    }, Card)
+end
 
+function Card:RankAsNumeric(): number
     if self.Rank == "A" then
-        return ace
+        return self.Ace
     end
 
     return Rank[self.Rank]
