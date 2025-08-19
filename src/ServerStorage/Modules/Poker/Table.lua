@@ -14,12 +14,15 @@ local Card = require(Modules.Poker.Card)
 local Pile = require(Modules.Poker.Pile)
 
 function Table.new(players: {[number]: Player})
-    local _players: {[number]: {Player: Player, Hand: Hand}} = {}
+    local _players: {[number]: {Id: number, Active: boolean, Chips: number, Hand: Hand, _Player: Player}} = {}
     for _, player in ipairs(players) do
-        _players[player.UserId] = {
-            Player = player,
+        table.insert(_players, {
+            Id = player.UserId,
+            Active = true,
+            Chips = 500,
             Hand = Pile.new(), 
-        }
+            _Player = player,
+        })
     end
 
     local deck = Deck.new()
@@ -44,6 +47,7 @@ function Table.new(players: {[number]: Player})
     return setmetatable({
         Players = _players,
         Deck = deck,
+        Pot = 0,
         Cards = {
             Community = Pile.new(),
             Burned = Pile.new()
@@ -51,15 +55,16 @@ function Table.new(players: {[number]: Player})
     }, Table)
 end
 
-function Table:AddPlayer(player: Player)
-    self.Players[player.UserId] = {
-        Player = player,
-        Hand = Pile.new(),
-    }
-end
-
+-- NOTE: was O(1), but order matters, so it's ok for an O(n).
+-- n will always be a low value anyway.
 function Table:GetPlayer(player: Player)
-    return self.Players[player.UserId]
+    for _, _player in ipairs(self.Players) do
+        if _player.Id == player.UserId then
+            return _player
+        end
+    end
+
+    return nil
 end
 
 function Table:DealToCommunity()

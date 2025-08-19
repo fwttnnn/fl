@@ -10,8 +10,10 @@ local player = game.Players.LocalPlayer
 local cardGUI = player.PlayerGui.ScreenGui.ViewportFrame
 cardGUI.Visible = false
 
-local EquipFunction = ReplicatedStorage.Functions.Hand:FindFirstChild("Equip")
-local UnequipFunction = ReplicatedStorage.Functions.Hand:FindFirstChild("Unequip")
+local Functions = {
+    Equip = ReplicatedStorage.Functions.Hand.Equip,
+    Unequip = ReplicatedStorage.Functions.Hand.Unequip,
+}
 
 local Objects = ReplicatedStorage:WaitForChild("Objects")
 local Cards = Objects.Cards.Poker
@@ -20,7 +22,7 @@ character.ChildAdded:Connect(function(child)
     if not child:IsA("Tool") then return end
 
     equipAnimation:Play()
-    local cards = EquipFunction:InvokeServer()
+    local cards = Functions.Equip:InvokeServer()
     local rightArm = character:FindFirstChild("Right Arm")
 
     local cardSpacing = 0.8
@@ -61,7 +63,7 @@ character.ChildAdded:Connect(function(child)
             end
         end)
 
-        print(part)
+        -- print(part)
     end
 
     cardGUI.Visible = true
@@ -71,7 +73,7 @@ character.ChildRemoved:Connect(function(child)
     if not child:IsA("Tool") then return end
 
     equipAnimation:Stop()
-    UnequipFunction:InvokeServer()
+    Functions.Unequip:InvokeServer()
 
     cardGUI.Visible = false
     for _, part: Part in ipairs(cardGUI:GetChildren()) do

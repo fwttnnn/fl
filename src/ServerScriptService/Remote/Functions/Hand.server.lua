@@ -1,14 +1,13 @@
 --!strict
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local EquipFunction = ReplicatedStorage.Functions.Hand:FindFirstChild("Equip")
-local UnequipFunction = ReplicatedStorage.Functions.Hand:FindFirstChild("Unequip")
-
 local ServerStorage = game:GetService("ServerStorage")
-local Modules = ServerStorage:WaitForChild("Modules")
-local Managers = ServerStorage:WaitForChild("Managers")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Functions = {
+    Equip = ReplicatedStorage.Functions.Hand.Equip,
+    Unequip = ReplicatedStorage.Functions.Hand.Unequip,
+}
 
-local Table = require(Modules.Poker.Table)
-local TableManager = require(Managers.Table)
+local Managers = ServerStorage:WaitForChild("Managers")
+local SessionManager = require(Managers.Session)
 
 function buildCards(handle: Part, cards: {[number]: Card}, cardSpacing: number)
     local center = handle.Position
@@ -48,7 +47,7 @@ function buildCards(handle: Part, cards: {[number]: Card}, cardSpacing: number)
     end
 end
 
-EquipFunction.OnServerInvoke = function(player: Player)
+Functions.Equip.OnServerInvoke = function(player: Player)
     local character = player.Character or player.CharacterAdded:Wait()
     local rightArm = character:FindFirstChild("Right Arm")
 
@@ -62,8 +61,8 @@ EquipFunction.OnServerInvoke = function(player: Player)
     handle.Transparency = 1
     Instance.new("Highlight", handle)
 
-    local _table = TableManager.FindPlayerTable(player)
-    local _player = _table:GetPlayer(player)
+    local session = SessionManager.FindPlayerSession(player)
+    local _player = session.Table:GetPlayer(player)
     buildCards(handle, _player.Hand.Cards, 0.19)
 
     local rightArmMotor6D = Instance.new("Motor6D")
@@ -84,7 +83,7 @@ EquipFunction.OnServerInvoke = function(player: Player)
     return _player.Hand.Cards
 end
 
-UnequipFunction.OnServerInvoke = function(player: Player): nil
+Functions.Unequip.OnServerInvoke = function(player: Player): nil
     local character = player.Character or player.CharacterAdded:Wait()
     local rightArm = character:FindFirstChild("Right Arm")
 
