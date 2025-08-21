@@ -17,7 +17,7 @@ function Timer.new()
     }, Timer)
 end
 
-function Timer:Start(duration)
+function Timer:Start(duration, player)
     if self.Running then
         warn("Warning: timer could not start again as it is already running.")
         return
@@ -30,6 +30,7 @@ function Timer:Start(duration)
     task.spawn(function()
         while self.Running and tick() - self.StartTime < duration do
             task.wait()
+            -- Events.Timer:FireClient(player, self:GetTimeLeft())
         end
 
         -- NOTE: stopped by other script, we don't want to fire finished.

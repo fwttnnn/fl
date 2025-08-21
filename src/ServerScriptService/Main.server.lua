@@ -11,9 +11,21 @@ local Managers = ServerStorage:WaitForChild("Managers")
 local SessionManager = require(Managers.Session)
 local Session = require(Modules.Session)
 
+local __players = {}
+
 Players.PlayerAdded:Connect(function(player)
-    local session = Session.new({player})
+    table.insert(__players, player)
+    if #__players < 2 then return end
+
+    task.wait(2)
+    
+    local p2 = table.remove(__players)
+    local p1 = table.remove(__players)
+
+    local session = Session.new({p1, p2})
     SessionManager.Add(session)
+
+    session:Start()
 
     -- session.Table.Cards.Community:Push(Card.new("9", "Hearts"))
     -- session.Table.Cards.Community:Push(Card.new("4", "Clubs"))
@@ -43,15 +55,4 @@ Players.PlayerAdded:Connect(function(player)
 
     -- print(Pile.new(_player1.Hand:Best(session.Table.Cards.Community.Cards)):Rank())
     -- print(Pile.new(_player2.Hand:Best(session.Table.Cards.Community.Cards)):Rank())
-
-    session:Start()
-
-    local p1 = player
-    local p2 = {UserId = 666}
-
-    -- session.Table:Deal(p1)
-    -- session.Table:Deal(p1)
-
-    -- session.Table:Deal(p2)
-    -- session.Table:Deal(p2)
 end)

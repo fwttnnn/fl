@@ -198,6 +198,16 @@ function _combinations(tbl, n)
     return combinations
 end
 
+function Pile:Score(): number
+    local score = 0
+
+    for _, card in ipairs(self.Cards) do
+        score += card:RankAsNumeric()
+    end
+
+    return score
+end
+
 function Pile:Best(cards: {Card}): {Card}
     assert(#self.Cards + #cards >= 5, "need to have at least 5 cards to calculate the best pile")
 
