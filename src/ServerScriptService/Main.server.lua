@@ -12,7 +12,7 @@ local SessionManager = require(Managers.Session)
 local Session = require(Modules.Session)
 
 Players.PlayerAdded:Connect(function(player)
-    local session = Session.new({player, {UserId = 666}})
+    local session = Session.new({player})
     SessionManager.Add(session)
 
     -- session.Table.Cards.Community:Push(Card.new("9", "Hearts"))
@@ -49,9 +49,9 @@ Players.PlayerAdded:Connect(function(player)
     local p1 = player
     local p2 = {UserId = 666}
 
-    session.Table:Deal(p1)
-    session.Table:Deal(p1)
+    -- session.Table:Deal(p1)
+    -- session.Table:Deal(p1)
 
-    session.Table:Deal(p2)
-    session.Table:Deal(p2)
+    -- session.Table:Deal(p2)
+    -- session.Table:Deal(p2)
 end)
