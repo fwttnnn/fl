@@ -7,7 +7,7 @@ local Modules = ServerStorage:WaitForChild("Modules")
 
 local Pile = require(Modules.Poker.Pile)
 local Table = require(Modules.Poker.Table)
-local Timer = require(Modules.Timer)
+local Timer = require(Modules.Common.Timer)
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Events = {
