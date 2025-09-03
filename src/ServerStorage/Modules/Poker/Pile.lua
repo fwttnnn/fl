@@ -185,17 +185,23 @@ end
 
 function _combinations(tbl, n)
     assert(n >= 0 and n <= #tbl)
-    local combinations = {}
+    local results = {}
 
-    for i = 1, #tbl do
-        if (i - 1) + n > #tbl then
-            break
+    local function backtrack(start, combo)
+        if #combo == n then
+            table.insert(results, {table.unpack(combo)})
+            return
         end
 
-        table.insert(combinations, _slice(tbl, i, (i - 1) + n))
+        for i = start, #tbl do
+            table.insert(combo, tbl[i])
+            backtrack(i + 1, combo)
+            table.remove(combo)
+        end
     end
 
-    return combinations
+    backtrack(1, {})
+    return results
 end
 
 function Pile:Score(): number
