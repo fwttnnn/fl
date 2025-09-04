@@ -20,26 +20,20 @@ function Match.new(players: {[number]: Player})
     local function onTimerFinished()
     end
 
-    local table = Table.new(players)
-
-    -- TODO: after betting, the index of last player to act + 1 should be the first to act.
-    -- thus, when re-betting, we can shift who the first get to act.
-    -- 
-    -- solution is: pass last index to `turns`, then build queue accordingly.
     local turns = Queue.new()
-    turns:Push({Type = "DEAL_PLAYERS"})
-    turns:Push({Type = "BETTING"})
-    turns:Push({Type = "DEAL_TABLE", Count = 3})
-    turns:Push({Type = "BETTING"})
-    turns:Push({Type = "DEAL_TABLE", Count = 1})
-    turns:Push({Type = "BETTING"})
-    turns:Push({Type = "DEAL_TABLE", Count = 1})
-    turns:Push({Type = "BETTING"})
-    turns:Push({Type = "SHOWDOWN"})
+    turns:Push({Type = "DP"})
+    turns:Push({Type = "BT"})
+    turns:Push({Type = "DT", Count = 3})
+    turns:Push({Type = "BT"})
+    turns:Push({Type = "DT", Count = 1})
+    turns:Push({Type = "BT"})
+    turns:Push({Type = "DT", Count = 1})
+    turns:Push({Type = "BT"})
+    turns:Push({Type = "SD"})
 
     return setmetatable({
-        Table = table,
         Turns = turns,
+        Table = Table.new(players),
         Timer = Timer.new(),
         Last = #players, -- last player to move
     }, Match)
@@ -52,17 +46,14 @@ end
 function Match:_Turn()
     while not self.Turns:IsEmpty() do
         local turn = self.Turns:Pop()
+        local handlers = {
+            DP = function() self:_TurnPlayerDealing() end,
+            DT = function() self:_TurnTableDealing(turn.Count) end,
+            BT = function() self:_TurnBetting() end,
+            SD = function() self:_TurnShowdown() end,
+        }
 
-        if turn.Type == "DEAL_PLAYERS" then
-            self:_TurnPlayerDealing()
-        elseif turn.Type == "DEAL_TABLE" then
-            self:_TurnTableDealing(turn.Count)
-        elseif turn.Type == "BETTING" then
-            self:_TurnBetting()
-        elseif turn.Type == "SHOWDOWN" then
-            -- should be the last
-            self:_TurnShowdown()
-        end
+        handlers[turn.Type]()
     end
 end
 
