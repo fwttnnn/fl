@@ -2,6 +2,15 @@
 local Timer = {}
 Timer.__index = Timer
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Events = {
+    Timer = {
+        Start = ReplicatedStorage.Events.Match.Timer.Start,
+        Progress = ReplicatedStorage.Events.Match.Timer.Progress,
+        End = ReplicatedStorage.Events.Match.Timer.End,
+    },
+}
+
 function Timer.new()
     local Events = {
         Finished = Instance.new("BindableEvent"),
@@ -28,9 +37,20 @@ function Timer:Start(duration, player)
     self.StartTime = tick()
 
     task.spawn(function()
+        local lastUpdate = 0
+
+        Events.Timer.Start:FireClient(player)
+
         while self.Running and tick() - self.StartTime < duration do
             task.wait()
-            -- Events.Timer:FireClient(player, self:GetTimeLeft())
+
+            local elapsed = tick() - self.StartTime
+            local alpha = elapsed / duration -- 0 -> 1 progress
+
+            if elapsed - lastUpdate >= .25 then
+                Events.Timer.Progress:FireClient(player, 1 - alpha) -- 1 -> 0 progress
+                lastUpdate = elapsed
+            end
         end
 
         -- NOTE: stopped by other script, we don't want to fire finished.
@@ -39,6 +59,7 @@ function Timer:Start(duration, player)
         self:Stop()
         self:Reset()
         self.Events.Finished:Fire()
+        Events.Timer.End:FireClient(player)
     end)
 end
 

@@ -18,19 +18,19 @@
 
 -- jazz chase okish 1839336610
 
-soundIds = {94175871924822}
-cursor = 1
+-- soundIds = {94175871924822}
+-- cursor = 1
 
-sound = Instance.new("Sound")
-sound.Name = "Background"
-sound.Parent = workspace.Invisible.SFX
+-- sound = Instance.new("Sound")
+-- sound.Name = "Background"
+-- sound.Parent = workspace.Invisible.SFX
 
-sound.SoundId = "rbxassetid://" .. soundIds[cursor]
-sound:Play()
+-- sound.SoundId = "rbxassetid://" .. soundIds[cursor]
+-- sound:Play()
 
-sound.Ended:Connect(function(_soundId)
-    cursor = (cursor % #soundIds) + 1
+-- sound.Ended:Connect(function(_soundId)
+--     cursor = (cursor % #soundIds) + 1
 
-    sound.SoundId = "rbxassetid://" .. soundIds[cursor]
-    sound:Play()
-end)
+--     sound.SoundId = "rbxassetid://" .. soundIds[cursor]
+--     sound:Play()
+-- end)

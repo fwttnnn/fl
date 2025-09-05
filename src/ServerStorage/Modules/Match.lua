@@ -14,32 +14,34 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Events = {
     Act = ReplicatedStorage.Events.Match.Act,
     Acted = ReplicatedStorage.Events.Match.Acted,
+    Timer = {
+        Start = ReplicatedStorage.Events.Match.Timer.Start,
+        Progress = ReplicatedStorage.Events.Match.Timer.Progress,
+        End = ReplicatedStorage.Events.Match.Timer.End,
+    },
 }
 
 function Match.new(players: {[number]: Player})
-    local function onTimerFinished()
-    end
-
-    local turns = Queue.new()
-    turns:Push({Type = "DP"})
-    turns:Push({Type = "BT"})
-    turns:Push({Type = "DT", Count = 3})
-    turns:Push({Type = "BT"})
-    turns:Push({Type = "DT", Count = 1})
-    turns:Push({Type = "BT"})
-    turns:Push({Type = "DT", Count = 1})
-    turns:Push({Type = "BT"})
-    turns:Push({Type = "SD"})
-
     return setmetatable({
-        Turns = turns,
         Table = Table.new(players),
+        Turns = Queue.new(),
         Timer = Timer.new(),
         Last = #players, -- last player to move
     }, Match)
 end
 
 function Match:Start()
+    self.Turns = Queue.new()
+    self.Turns:Push({Type = "DP"})
+    self.Turns:Push({Type = "BT"})
+    self.Turns:Push({Type = "DT", Count = 3})
+    self.Turns:Push({Type = "BT"})
+    self.Turns:Push({Type = "DT", Count = 1})
+    self.Turns:Push({Type = "BT"})
+    self.Turns:Push({Type = "DT", Count = 1})
+    self.Turns:Push({Type = "BT"})
+    self.Turns:Push({Type = "SD"})
+
     self:_Turn()
 end
 
@@ -57,13 +59,19 @@ function Match:_Turn()
     end
 end
 
-function Match:_TurnPlayerDealing()
+function Match:_BuildQueue(): Queue
     local queue = Queue.new()
+
     for i = 1, #self.Table.Players do
         local p = self.Table.Players[((self.Last + i - 1) % #self.Table.Players) + 1]
         queue:Push(p)
     end
 
+    return queue
+end
+
+function Match:_TurnPlayerDealing()
+    local queue = self:_BuildQueue()
     for _ = 1, queue:Size() do
         local _player = queue:Pop()
         assert(_player.Active)
@@ -82,12 +90,7 @@ function Match:_TurnTableDealing(count: number)
 end
 
 function Match:_TurnBetting()
-    local queue = Queue.new()
-    for i = 1, #self.Table.Players do
-        local p = self.Table.Players[((self.Last + i - 1) % #self.Table.Players) + 1]
-        queue:Push(p)
-    end
-
+    local queue = self:_BuildQueue()
     local highestBet = 0
     local lastAction = {
         Type = nil,
@@ -220,13 +223,15 @@ function Match:_TurnBetting()
         end)
 
         Events.Act:FireClient(_player.Player)
+        Events.Timer.Start:FireClient(_player.Player)
         assert(not self.Timer.Running)
         self.Timer:Reset()
-        self.Timer:Start(5)
+        self.Timer:Start(20, _player.Player)
 
         print("waiting " .. _player.Player.DisplayName .. " to act")
         acted.Event:Wait()
         print("player: " .. _player.Player.DisplayName .. " acted")
+        Events.Timer.End:FireClient(_player.Player) 
         self.Timer:Stop()
         self.Timer:Reset()
 

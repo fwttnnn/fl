@@ -22,6 +22,13 @@ Players.PlayerAdded:Connect(function(player)
 
 
 
+    -- local Timer = require(Modules.Common.Timer)
+
+    -- local timer = Timer.new()
+    -- timer:Start(20, player)
+
+
+
     table.insert(__players, player)
     if #__players < 2 then return end
 
@@ -55,15 +62,10 @@ Players.PlayerAdded:Connect(function(player)
     -- _player2.Hand:Push(Card.new("7", "Hearts"))
 
     -- print(_player1.Hand:Best(match.Table.Cards.Community.Cards))
-    -- print(Pile.new(_player1.Hand:Best(match.Table.Cards.Community.Cards)):Rank())
+    -- local pile1 = Pile.new(_player1.Hand:Best(match.Table.Cards.Community.Cards))
+    -- print(pile1:Rank(), pile1:Score())
 
     -- print(_player2.Hand:Best(match.Table.Cards.Community.Cards))
-    -- print(Pile.new(_player2.Hand:Best(match.Table.Cards.Community.Cards)):Rank())
+    -- local pile2 = Pile.new(_player2.Hand:Best(match.Table.Cards.Community.Cards))
+    -- print(pile2:Rank(), pile2:Score())
 end)
-
--- local bind = Instance.new("BindableEvent")
-
--- for i = 1, 10 do
---     print(i)
---     local data = bind.Event:Wait()
--- end
