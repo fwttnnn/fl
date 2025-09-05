@@ -1,3 +1,4 @@
+--!strict
 -- A radio that plays through all players.
 
 -- burn 90935264615216
