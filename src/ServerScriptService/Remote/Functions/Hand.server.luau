@@ -3,8 +3,10 @@ local ServerStorage = game:GetService("ServerStorage")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Functions = {
-    Equip = ReplicatedStorage.Functions.Hand.Equip,
-    Unequip = ReplicatedStorage.Functions.Hand.Unequip,
+    Hand = {
+        Equip = ReplicatedStorage.Functions.Hand.Equip,
+        Unequip = ReplicatedStorage.Functions.Hand.Unequip,
+    },
 }
 
 local Managers = {
@@ -49,7 +51,7 @@ function buildCards(handle: Part, cards: {[number]: Card}, cardSpacing: number)
     end
 end
 
-Functions.Equip.OnServerInvoke = function(player: Player)
+Functions.Hand.Equip.OnServerInvoke = function(player: Player)
     local character = player.Character or player.CharacterAdded:Wait()
     local rightArm = character:FindFirstChild("Right Arm")
 
@@ -86,7 +88,7 @@ Functions.Equip.OnServerInvoke = function(player: Player)
     return _player.Hand.Cards
 end
 
-Functions.Unequip.OnServerInvoke = function(player: Player): nil
+Functions.Hand.Unequip.OnServerInvoke = function(player: Player): nil
     local character = player.Character or player.CharacterAdded:Wait()
     local rightArm = character:FindFirstChild("Right Arm")
 

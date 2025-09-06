@@ -2,6 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Events = {
     Act = ReplicatedStorage.Events.Match.Act,
     Acted = ReplicatedStorage.Events.Match.Acted,
+    Action = ReplicatedStorage.Events.Match.Action,
     Timer = {
         Start = ReplicatedStorage.Events.Match.Timer.Start,
         Progress = ReplicatedStorage.Events.Match.Timer.Progress,
@@ -54,6 +55,10 @@ Events.Acted.OnClientEvent:Connect(function()
     disableButtons()
 end)
 
+Events.Action.OnClientEvent:Connect(function(player, action)
+    print("[action]", player.DisplayName .. " acted " .. action.Type, action.Amount)
+end)
+
 local BarUI = PlayerGui.ScreenGui.Timer.Wrapper.Bar
 
 Events.Timer.Start.OnClientEvent:Connect(function()
@@ -65,7 +70,7 @@ Events.Timer.Progress.OnClientEvent:Connect(function(progress)
     if progress < 0 then progress = 0 end
     if progress > 1 then progress = 1 end
 
-    print(progress)
+    -- print(progress)
 
     -- BarUI.Size = BarUI.Size:Lerp(UDim2.new(progress, 0, 1, 0), 0.1)
     BarUI.Size = UDim2.new(progress, 0, 1, 0)

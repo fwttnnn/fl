@@ -14,6 +14,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Events = {
     Act = ReplicatedStorage.Events.Match.Act,
     Acted = ReplicatedStorage.Events.Match.Acted,
+    Action = ReplicatedStorage.Events.Match.Action,
     Timer = {
         Start = ReplicatedStorage.Events.Match.Timer.Start,
         Progress = ReplicatedStorage.Events.Match.Timer.Progress,
@@ -176,6 +177,7 @@ function Match:_TurnBetting()
         }
 
         local acted = Instance.new("BindableEvent")
+        local _action
 
         local actEventConnection
         local timerFinishedConnection
@@ -189,6 +191,7 @@ function Match:_TurnBetting()
             local accepted = handler(action)
             if not accepted then return end
 
+            _action = action
             lastAction = {
                 Type = action.Type,
                 Amount = action.Amount,
@@ -234,6 +237,11 @@ function Match:_TurnBetting()
         Events.Timer.End:FireClient(_player.Player) 
         self.Timer:Stop()
         self.Timer:Reset()
+
+        for _, p in ipairs(self.Table.Players) do
+            if p.Id == _player.Id then continue end
+            Events.Action:FireClient(p.Player, _player.Player, _action)
+        end
 
         actEventConnection:Disconnect()
         timerFinishedConnection:Disconnect() -- NOTE: make sure timer is disconnected. 
