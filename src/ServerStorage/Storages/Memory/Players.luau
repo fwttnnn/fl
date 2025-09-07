@@ -27,6 +27,8 @@ function Storage.Load(player: Player)
         House = Storages.Global.House.Get(player),
         Chips = Storages.Global.Chips.Get(player),
     }
+
+    return Storage[player.UserId]
 end
 
 return Storage

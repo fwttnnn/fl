@@ -3,8 +3,8 @@ local ServerStorage = game:GetService("ServerStorage")
 local Players = game:GetService("Players")
 
 local Storages = {
-    Memory = {
-        Players = require(ServerStorage:WaitForChild("Storages").Memory.Players),
+    Global = {
+        House = require(ServerStorage:WaitForChild("Storages").Global.House),
     },
 }
 
@@ -29,7 +29,7 @@ Players.PlayerAdded:Connect(function(player: Player)
         label.BackgroundTransparency = 1
         label.Text = player.DisplayName
 
-        local house = Storages.Memory.Players.Get(player).House
+        local house = Storages.Global.House.Get(player)
         if house then
             label.Text = "[" .. house.Symbol .. "] " .. label.Text
         end
