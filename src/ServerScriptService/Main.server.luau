@@ -10,13 +10,17 @@ local Table = require(Modules.Poker.Table)
 local Chips = require(Modules.Poker.Economy.Chips)
 local Match = require(Modules.Match)
 
-local Managers = {
-    Match = require(ServerStorage:WaitForChild("Managers").Match),
+local Storages = {
+    Memory = {
+        Matches = require(ServerStorage:WaitForChild("Storages").Memory.Matches),
+        Players = require(ServerStorage:WaitForChild("Storages").Memory.Players),
+    },
 }
 
 local __players = {}
 Players.PlayerAdded:Connect(function(player)
     table.insert(__players, player)
+    Storages.Memory.Players.Load(player)
 end)
 
 -- NOTE: listen for players to join, for testing purposes.
@@ -33,7 +37,7 @@ task.spawn(function()
         Chips.Gain(p1, 500)
 
         local match = Match.new({p1, p2})
-        Managers.Match.Add(match)
+        Storages.Memory.Matches.Add(match)
         match:Start()
     end
 end)

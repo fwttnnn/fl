@@ -1,4 +1,0 @@
---!strict
--- Server Manager, keep track of all the alive servers
--- 
--- TODO: WIP

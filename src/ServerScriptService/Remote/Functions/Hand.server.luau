@@ -13,8 +13,11 @@ local Functions = {
     },
 }
 
-local Managers = {
-    Match = require(ServerStorage:WaitForChild("Managers").Match),
+local Storages = {
+    Memory = {
+        Matches = require(ServerStorage:WaitForChild("Storages").Memory.Matches),
+        Players = require(ServerStorage:WaitForChild("Storages").Memory.Players),
+    },
 }
 
 function buildCards(handle: Part, cards: {[number]: Card}, cardSpacing: number)
@@ -69,14 +72,14 @@ Functions.Hand.Equip.OnServerInvoke = function(player: Player)
     handle.Transparency = 1
     Instance.new("Highlight", handle)
 
-    local house = House.Get(player)
+    local house = Storages.Memory.Players.Get(player).House
     local suit = (house and house.Name) or "Club"
 
     local cards = {}
     table.insert(cards, Card.new("6", suit .. 's'))
     table.insert(cards, Card.new("A", suit .. 's'))
 
-    local match = Managers.Match.Find(player)
+    local match = Storages.Memory.Matches.Find(player)
     if match then
         local _player = match.Table:GetPlayer(player)
         cards = _player.Hand.Cards

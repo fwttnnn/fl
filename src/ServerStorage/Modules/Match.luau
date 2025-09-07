@@ -93,7 +93,7 @@ function Match:Start()
 
     self.Locked = true
     -- TODO: ehh, do we remove it this quick? players can't view their hand anymore.
-    -- Managers.Match.Remove(self)
+    -- Storages.Memory.Matches.Remove(self)
 end
 
 function Match:_Turn(): Player
