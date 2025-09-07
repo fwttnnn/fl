@@ -2,8 +2,11 @@
 local ServerStorage = game:GetService("ServerStorage")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Modules = ServerStorage:WaitForChild("Modules")
-local House = require(Modules.House)
+local Storages = {
+    Global = {
+        House = require(ServerStorage:WaitForChild("Storages").Global.House),
+    },
+}
 
 local Functions = {
     House = {
@@ -12,5 +15,5 @@ local Functions = {
 }
 
 Functions.House.Get.OnServerInvoke = function(player: Player) -- TODO: typeof house
-    return House.Get(player)
+    return Storages.Global.House.Get(player)
 end

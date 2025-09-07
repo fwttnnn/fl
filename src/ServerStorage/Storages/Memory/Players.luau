@@ -3,10 +3,12 @@
 local Storage = {}
 
 local ServerStorage = game:GetService("ServerStorage")
-local Modules = ServerStorage:WaitForChild("Modules")
-
-local House = require(Modules.House)
-local Chips = require(Modules.Poker.Economy.Chips)
+local Storages = {
+    Global = {
+        House = require(ServerStorage:WaitForChild("Storages").Global.House),
+        Chips = require(ServerStorage:WaitForChild("Storages").Global.Chips),
+    },
+}
 
 function Storage.Get(player: Player)
     return Storage[player.UserId]
@@ -22,8 +24,8 @@ end
 
 function Storage.Load(player: Player)
     Storage[player.UserId] = {
-        House = House.Get(player),
-        Chips = Chips.Get(player),
+        House = Storages.Global.House.Get(player),
+        Chips = Storages.Global.Chips.Get(player),
     }
 end
 

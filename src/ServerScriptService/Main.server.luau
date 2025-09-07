@@ -6,11 +6,12 @@ local Modules = ServerStorage:WaitForChild("Modules")
 local Card = require(Modules.Poker.Card)
 local Pile = require(Modules.Poker.Pile)
 local Table = require(Modules.Poker.Table)
-
-local Chips = require(Modules.Poker.Economy.Chips)
 local Match = require(Modules.Match)
 
 local Storages = {
+    Global = {
+        Chips = require(ServerStorage:WaitForChild("Storages").Global.Chips),
+    },
     Memory = {
         Matches = require(ServerStorage:WaitForChild("Storages").Memory.Matches),
         Players = require(ServerStorage:WaitForChild("Storages").Memory.Players),
@@ -33,8 +34,8 @@ task.spawn(function()
         local p2 = table.remove(__players)
         local p1 = table.remove(__players)
 
-        Chips.Gain(p2, 500)
-        Chips.Gain(p1, 500)
+        Storages.Global.Chips.Gain(p2, 500)
+        Storages.Global.Chips.Gain(p1, 500)
 
         local match = Match.new({p1, p2})
         Storages.Memory.Matches.Add(match)

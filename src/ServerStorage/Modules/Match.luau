@@ -7,10 +7,15 @@ local Modules = ServerStorage:WaitForChild("Modules")
 
 local Pile = require(Modules.Poker.Pile)
 local Table = require(Modules.Poker.Table)
-local Chips = require(Modules.Poker.Economy.Chips)
 
 local Timer = require(Modules.Common.Timer)
 local Queue = require(Modules.Common.Queue)
+
+local Storages = {
+    Global = {
+        Chips = require(ServerStorage:WaitForChild("Storages").Global.Chips),
+    },
+}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Events = {
@@ -38,7 +43,7 @@ function Match.new(players: {[number]: Player})
 
     -- TODO: check if player can join before calling Match.new()
     for _, player in ipairs(players) do
-        if Chips.Get(player) - stake < 0 then
+        if Storages.Global.Chips.Get(player) - stake < 0 then
             return nil
         end
     end
@@ -47,7 +52,7 @@ function Match.new(players: {[number]: Player})
         -- NOTE: cached remaining chips.
         --       before entering, player should have enough chips to enter.
         --       the script that calls Match.new() should check first.
-        local remaining = Chips.Lose(player, stake)
+        local remaining = Storages.Global.Chips.Lose(player, stake)
 
         table.insert(_players, {
             Player = player,
@@ -83,12 +88,12 @@ function Match:Start()
     self.Turns:Push({Type = "SD"})
 
     local winner = self:_Turn()
-    Chips.Gain(winner, self.Table.Pot)
+    Storages.Global.Chips.Gain(winner, self.Table.Pot)
 
     -- NOTE: gain back chips on table.
     --       at this point, the match should be disposed (wip, later we can restart)
     for _, p in ipairs(self.Table.Players) do
-        Chips.Gain(p.Player, p.Chips.Stake)
+        Storages.Global.Chips.Gain(p.Player, p.Chips.Stake)
     end
 
     self.Locked = true

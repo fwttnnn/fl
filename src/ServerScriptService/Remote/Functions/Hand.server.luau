@@ -4,7 +4,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Modules = ServerStorage:WaitForChild("Modules")
 local Card = require(Modules.Poker.Card)
-local House = require(Modules.House)
 
 local Functions = {
     Hand = {
