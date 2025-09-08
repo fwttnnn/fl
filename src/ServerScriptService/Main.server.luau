@@ -23,11 +23,17 @@ Players.PlayerAdded:Connect(function(player)
     table.insert(__players, player)
     Storages.Memory.Players.Load(player)
 
-    -- Storages.Global.Chips.Gain(player, 500)
-    -- Storages.Global.Chips.Gain({UserId = 666}, 500)
+    Storages.Global.Chips.Gain(player, 500)
+    Storages.Global.Chips.Gain({UserId = 666}, 500)
 
-    -- local match = Match.new({player, {UserId = 666}})
-    -- Storages.Memory.Matches.Add(match)
+    local match = Match.new({player, {UserId = 666}})
+    Storages.Memory.Matches.Add(match)
+
+    -- match.Table:Deal()
+    -- match.Table:Deal()
+    -- match.Table:Deal()
+    -- match.Table:Deal()
+    -- match.Table:Deal()
 
     -- match.Table.Cards.Community:Push(Card.new("4", "Clubs"))
     -- match.Table.Cards.Community:Push(Card.new("Q", "Diamonds"))
@@ -35,13 +41,13 @@ Players.PlayerAdded:Connect(function(player)
     -- match.Table.Cards.Community:Push(Card.new("10", "Spades"))
     -- match.Table.Cards.Community:Push(Card.new("J", "Hearts"))
 
-    -- local _player1 = match.Table:GetPlayer(player)
-    -- _player1.Hand:Push(Card.new("6", "Clubs"))
-    -- _player1.Hand:Push(Card.new("6", "Hearts"))
+    local _player1 = match.Table:GetPlayer(player)
+    _player1.Hand:Push(Card.new("6", "Clubs"))
+    _player1.Hand:Push(Card.new("6", "Hearts"))
 
-    -- local _player2 = match.Table:GetPlayer({UserId = 666})
-    -- _player2.Hand:Push(Card.new("6", "Hearts"))
-    -- _player2.Hand:Push(Card.new("3", "Diamonds"))
+    local _player2 = match.Table:GetPlayer({UserId = 666})
+    _player2.Hand:Push(Card.new("6", "Hearts"))
+    _player2.Hand:Push(Card.new("3", "Diamonds"))
 
     -- local hands = {}
     -- for _, _player in ipairs(match.Table.Players) do

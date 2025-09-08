@@ -32,7 +32,7 @@ function Card.new(rank: Rank, suit: Suit, ace: number?)
 
     -- TODO: CURRENTLY, HAND CAN COPY ITSELF, WHICH CLONES A NEW CARD PART.
     -- INSTEAD, IT SHOULDN'T CLONE A NEW CARD PART.
-    local template: Part = workspace:WaitForChild("Board").CARDEXAMPLE
+    local template: Part = workspace.Development.Board.CARDEXAMPLE
     local part: Part = Cards.Blank:Clone()
 
     part.Anchored = true

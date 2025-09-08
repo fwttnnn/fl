@@ -3,7 +3,7 @@ local Deck = {}
 Deck.__index = Deck
 
 function Deck.new()
-    local template: Part = workspace:WaitForChild("Board").DECKEXAMPLE
+    local template: Part = workspace.Development.Board.DECKEXAMPLE
     local part: Part = template:Clone()
     local clickDetector: ClickDetector = Instance.new("ClickDetector", part)
 
@@ -11,7 +11,7 @@ function Deck.new()
 
     part.Name = "Deck"
     part.CanQuery = true
-    part.Parent = workspace
+    part.Parent = workspace.Development.Board
 
     return setmetatable({
         Part = part,
@@ -80,7 +80,7 @@ function Deck:Pop(): Card
 end
 
 function Deck:Deal(player: Player, cardInHandPosition: Vector3, __NPLAYERHAND: number)
-    local _Board = workspace:WaitForChild("Board").Board
+    local _Board = workspace.Development.Board.Board
     local direction: Vector3 = (cardInHandPosition - _Board.Position).Unit
     direction = Vector3.new(direction.X, 0, direction.Z)
     -- direction = Vector3.new((direction.X >= 0 and 1 or -1), 0, (direction.Z >= 0 and 1 or -1))
