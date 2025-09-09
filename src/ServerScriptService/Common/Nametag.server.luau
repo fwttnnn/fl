@@ -16,15 +16,31 @@ Players.PlayerAdded:Connect(function(player: Player)
         -- NOTE: remove default display name
         humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
 
-        local tag = Instance.new("BillboardGui")
-        tag.Size = UDim2.new(3, 0, 1, 0)
-        tag.StudsOffsetWorldSpace = Vector3.new(0, 1.8, 0)
-        tag.AlwaysOnTop = false
-        tag.Name = "Nametag"
-        tag.Adornee = head
-        tag.Parent = head
+        -- local billboard = Instance.new("Part", head)
+        -- billboard.Name = "Billboard"
+        -- billboard.Size = Vector3.new(3, 1, 0.001)
+        -- billboard.Anchored = true
+        -- billboard.Massless = true
+        -- billboard.CanCollide = false
+        -- billboard.Transparency = 1
+        -- billboard:SetAttribute("Billboard", true)
+        -- billboard:SetAttribute("Attached", true)
+        -- billboard:SetAttribute("Offset", Vector3.new(0, 1.8, 0))
 
-        local label = Instance.new("TextLabel")
+        -- local gui = Instance.new("SurfaceGui", billboard)
+        -- gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+        -- gui.PixelsPerStud = 100
+        -- gui.Face = Enum.NormalId.Back
+
+        local billboard = Instance.new("BillboardGui")
+        billboard.Size = UDim2.new(3, 0, 1, 0)
+        billboard.StudsOffsetWorldSpace = Vector3.new(0, 1.8, 0)
+        billboard.AlwaysOnTop = false
+        billboard.Name = "Nametag"
+        billboard.Adornee = head
+        billboard.Parent = head
+
+        local label = Instance.new("TextLabel", billboard)
         label.Size = UDim2.new(1, 0, 1, 0)
         label.BackgroundTransparency = 1
         label.Text = player.DisplayName
@@ -35,9 +51,8 @@ Players.PlayerAdded:Connect(function(player: Player)
         end
 
         label.TextColor3 = Color3.fromRGB(255, 255, 255)
-        label.TextStrokeTransparency = 0.5
+        label.TextStrokeTransparency = 0
         label.Font = Enum.Font.GothamBold
         label.TextScaled = true
-        label.Parent = tag
     end)
 end)

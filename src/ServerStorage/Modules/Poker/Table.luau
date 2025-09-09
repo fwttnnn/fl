@@ -87,7 +87,6 @@ function Table:DealToCommunity()
     self.Cards.Community:Push(card)
 
     local _board = workspace.Development.Board
-
     local communityCardsLine = _board.Gugugaga
     local nCards = #self.Cards.Community.Cards
     local slotWidth = card.Part.Size.X + 0.03
@@ -111,14 +110,34 @@ function Table:DealToCommunity()
 
     tween.Completed:Once(function()
         local billboard = Instance.new("BillboardGui")
-        billboard.Size = UDim2.new(0.5, 0, 0.5, 0)
-        -- billboard.StudsOffsetWorldSpace = Vector3.new(0, .8 + (.17 * nCards), 0)
+        billboard.Size = UDim2.new(1.25, 0, 0.5, 0)
         billboard.StudsOffsetWorldSpace = Vector3.new(0, .8, 0)
-        billboard.AlwaysOnTop = false
+        billboard.AlwaysOnTop = true
         billboard.Adornee = card.Part
         billboard.Parent = card.Part
 
-        -- TODO: move this somewhere, or use house 
+        -- local billboard = Instance.new("Part", card.Part)
+        -- billboard.Name = "Billboard"
+        -- billboard.Size = Vector3.new(1, .5, 0.001)
+        -- billboard.Anchored = true
+        -- billboard.Massless = true
+        -- billboard.CanCollide = false
+        -- billboard.Transparency = 1
+        -- billboard.CFrame = card.Part.CFrame + Vector3.new(0, .8, 0)
+        -- billboard:SetAttribute("Billboard", true)
+
+        -- local gui = Instance.new("SurfaceGui", billboard)
+        -- gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+        -- gui.PixelsPerStud = 100
+        -- gui.Face = Enum.NormalId.Back
+
+        local layout = Instance.new("UIListLayout")
+        layout.FillDirection = Enum.FillDirection.Horizontal -- side by side
+        layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        layout.VerticalAlignment = Enum.VerticalAlignment.Center
+        layout.SortOrder = Enum.SortOrder.LayoutOrder
+        layout.Parent = billboard
+
         local symbols = {
             Spades = "♠",
             Clubs = "♣",
@@ -126,16 +145,51 @@ function Table:DealToCommunity()
             Hearts = "♥",
         }
 
-        local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(1, 0, 1, 0)
-        label.BackgroundTransparency = 1
-        label.Text = symbols[card.Suit] .. " " .. card.Rank
-        label.TextColor3 = Color3.fromRGB(255, 255, 255)
-        label.TextStrokeTransparency = 0.5
-        -- label.Font = Enum.Font.GothamBold
-        -- label.TextSize = 16
-        label.TextScaled = true
-        label.Parent = billboard
+        -- Container frame
+        local container = Instance.new("Frame")
+        container.Size = UDim2.fromScale(.5, 1)
+        container.BackgroundTransparency = 1
+        container.Parent = billboard
+
+        -- Layout manager
+        local layout = Instance.new("UIListLayout")
+        layout.FillDirection = Enum.FillDirection.Horizontal -- side by side
+        layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        layout.HorizontalFlex = Enum.UIFlexAlignment.Fill
+        layout.VerticalAlignment = Enum.VerticalAlignment.Center
+        layout.SortOrder = Enum.SortOrder.LayoutOrder
+        layout.Parent = container
+
+        -- Suit label
+        local suitLabel = Instance.new("TextLabel")
+        suitLabel.AutomaticSize = Enum.AutomaticSize.X
+        suitLabel.Size = UDim2.fromScale(0, .9)
+        suitLabel.AnchorPoint = Vector2.new(.5, .5)
+        suitLabel.BackgroundTransparency = 1
+        suitLabel.Text = symbols[card.Suit]
+        suitLabel.TextScaled = true
+        suitLabel.TextColor3 = (card.Suit == "Hearts" or card.Suit == "Diamonds")
+            and Color3.fromRGB(255, 0, 0)
+            or Color3.fromRGB(0, 0, 0)
+        suitLabel.TextStrokeColor3 = (card.Suit == "Hearts" or card.Suit == "Diamonds")
+            and Color3.fromRGB(0, 0, 0)
+            or Color3.fromRGB(255, 255, 255)
+        suitLabel.TextStrokeTransparency = 0.5
+        suitLabel.LayoutOrder = 1
+        suitLabel.Parent = container
+
+        -- Rank label
+        local rankLabel = Instance.new("TextLabel")
+        rankLabel.AutomaticSize = Enum.AutomaticSize.X
+        rankLabel.Size = UDim2.fromScale(0, .9)
+        rankLabel.AnchorPoint = Vector2.new(.5, .5)
+        rankLabel.BackgroundTransparency = 1
+        rankLabel.Text = card.Rank
+        rankLabel.TextScaled = true
+        rankLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        rankLabel.TextStrokeTransparency = 0.5
+        rankLabel.LayoutOrder = 2
+        rankLabel.Parent = container
 
         print(billboard)
     end)
