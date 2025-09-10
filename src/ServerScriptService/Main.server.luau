@@ -23,17 +23,17 @@ Players.PlayerAdded:Connect(function(player)
     table.insert(__players, player)
     Storages.Memory.Players.Load(player)
 
-    -- Storages.Global.Chips.Gain(player, 500)
-    -- Storages.Global.Chips.Gain({UserId = 666}, 500)
+    Storages.Global.Chips.Gain(player, 500)
+    Storages.Global.Chips.Gain({UserId = 666}, 500)
 
-    -- local match = Match.new({player, {UserId = 666}})
-    -- Storages.Memory.Matches.Add(match)
+    local match = Match.new({player, {UserId = 666}})
+    Storages.Memory.Matches.Add(match)
 
-    -- match.Table:Deal()
-    -- match.Table:Deal()
-    -- match.Table:Deal()
-    -- match.Table:Deal()
-    -- match.Table:Deal()
+    match.Table:Deal()
+    match.Table:Deal()
+    match.Table:Deal()
+    match.Table:Deal()
+    match.Table:Deal()
 
     -- match.Table.Cards.Community:Push(Card.new("4", "Clubs"))
     -- match.Table.Cards.Community:Push(Card.new("Q", "Diamonds"))
@@ -81,20 +81,20 @@ Players.PlayerAdded:Connect(function(player)
 end)
 
 -- NOTE: listen for players to join, for testing purposes.
-task.spawn(function()
-    while true do
-        task.wait(0.5)
-        if #__players < 2 then continue end
-        task.wait(4)
+-- task.spawn(function()
+--     while true do
+--         task.wait(0.5)
+--         if #__players < 2 then continue end
+--         task.wait(4)
 
-        local p2 = table.remove(__players)
-        local p1 = table.remove(__players)
+--         local p2 = table.remove(__players)
+--         local p1 = table.remove(__players)
 
-        Storages.Global.Chips.Gain(p2, 500)
-        Storages.Global.Chips.Gain(p1, 500)
+--         Storages.Global.Chips.Gain(p2, 500)
+--         Storages.Global.Chips.Gain(p1, 500)
 
-        local match = Match.new({p1, p2})
-        Storages.Memory.Matches.Add(match)
-        match:Start()
-    end
-end)
+--         local match = Match.new({p1, p2})
+--         Storages.Memory.Matches.Add(match)
+--         match:Start()
+--     end
+-- end)

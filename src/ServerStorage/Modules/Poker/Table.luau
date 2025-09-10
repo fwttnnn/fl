@@ -39,15 +39,33 @@ function Table.new(players: {[number]: {Player: Player, Chips: {Remaining: numbe
     deck:Shuffle()
 
     local _board = workspace.Development.Board
-    local communityCardsLine = Instance.new("Part")
-    communityCardsLine.Name = "Gugugaga"
-    communityCardsLine.Color = Color3.fromRGB(200, 0, 100)
-    communityCardsLine.Transparency = 1
-    communityCardsLine.Anchored = true
-    communityCardsLine.Parent = _board
-    communityCardsLine.Position = _board.CommunityCardsLine.Position
-    communityCardsLine.Rotation = Vector3.new(0, -180, 0)
-    communityCardsLine.Size = Vector3.new((Cards.Blank.Size.X + 0.03) * 5, 0, Cards.Blank.Size.Z)
+    local inner = Instance.new("Part")
+    inner.Name = "Gugugaga"
+    inner.Color = Color3.fromRGB(200, 0, 100)
+    inner.Transparency = 1
+    inner.Anchored = true
+    inner.Position = _board.CommunityCardsLine.Position
+    inner.Rotation = Vector3.new(0, -180, 0)
+    inner.Size = Vector3.new((Cards.Blank.Size.X + 0.03) * 5, 0, Cards.Blank.Size.Z + 0.05)
+
+    local outer = Instance.new("Part")
+    outer.Name = "outer"
+    outer.Anchored = true
+    outer.Size = inner.Size + Vector3.new(0.05, 0, 0.05)
+    outer.Position = inner.Position
+    outer.Parent = _board
+
+    outer.Color = Color3.fromRGB(202, 191, 163) -- beige
+    outer.Material = Enum.Material.Concrete
+
+    local union = outer:SubtractAsync({inner})
+    union.Name = "CommunityCardsUnion"
+    union.Position -= Vector3.new(0, 0.0007, 0) -- NOTE: so the lines goes inside the board a little
+    union.Parent = _board
+
+    inner.Parent = union
+    outer:Destroy()
+    print(union)
 
     return setmetatable({
         Players = _players,
@@ -87,7 +105,8 @@ function Table:DealToCommunity()
     self.Cards.Community:Push(card)
 
     local _board = workspace.Development.Board
-    local communityCardsLine = _board.Gugugaga
+    local inner = _board.CommunityCardsUnion.Gugugaga
+    
     local nCards = #self.Cards.Community.Cards
     local slotWidth = card.Part.Size.X + 0.03
 
@@ -95,10 +114,10 @@ function Table:DealToCommunity()
     card.Part.Face.Transparency = 0
 
     card.Part.Anchored = true
-    card.Part.Parent = communityCardsLine
+    card.Part.Parent = inner
     card.Part.Rotation = Vector3.new(0, -180, 0)
 
-    local leftEdge = communityCardsLine.Position + Vector3.new(communityCardsLine.Size.X / 2, 0, 0)
+    local leftEdge = inner.Position + Vector3.new(inner.Size.X / 2, 0, 0)
     local targetPos = leftEdge - Vector3.new(slotWidth * (nCards - 1) + (slotWidth / 2), 0, 0)
 
     local TweenService = game:GetService("TweenService")
