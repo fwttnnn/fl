@@ -13,7 +13,13 @@ local Deck = require(Modules.Poker.Deck)
 local Card = require(Modules.Poker.Card)
 local Pile = require(Modules.Poker.Pile)
 
-function Table.new(players: {[number]: {Player: Player, Chips: {Remaining: number, Stake: number}}})
+local Storages = {
+    Global = {
+        House = require(ServerStorage:WaitForChild("Storages").Global.House),
+    },
+}
+
+function Table.new(players: {[number]: Player})
     local _players = {}
     for _, player in ipairs(players) do
         local p = player.Player
@@ -22,10 +28,7 @@ function Table.new(players: {[number]: {Player: Player, Chips: {Remaining: numbe
             Id = p.UserId,
             Player = p,
             Active = true,
-            Chips = {
-                Remaining = player.Chips.Remaining,
-                Stake = player.Chips.Stake,
-            },
+            Health = 100,
             Hand = Pile.new(), 
         })
     end
@@ -150,53 +153,40 @@ function Table:DealToCommunity()
         -- gui.Face = Enum.NormalId.Back
 
         local layout = Instance.new("UIListLayout")
-        layout.FillDirection = Enum.FillDirection.Horizontal -- side by side
+        layout.FillDirection = Enum.FillDirection.Horizontal
         layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
         layout.VerticalAlignment = Enum.VerticalAlignment.Center
         layout.SortOrder = Enum.SortOrder.LayoutOrder
         layout.Parent = billboard
 
-        local symbols = {
-            Spades = "♠",
-            Clubs = "♣",
-            Diamonds = "♦",
-            Hearts = "♥",
-        }
-
-        -- Container frame
         local container = Instance.new("Frame")
         container.Size = UDim2.fromScale(.5, 1)
         container.BackgroundTransparency = 1
         container.Parent = billboard
 
-        -- Layout manager
         local layout = Instance.new("UIListLayout")
-        layout.FillDirection = Enum.FillDirection.Horizontal -- side by side
+        layout.FillDirection = Enum.FillDirection.Horizontal
         layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
         layout.HorizontalFlex = Enum.UIFlexAlignment.Fill
         layout.VerticalAlignment = Enum.VerticalAlignment.Center
         layout.SortOrder = Enum.SortOrder.LayoutOrder
         layout.Parent = container
 
-        -- Suit label
+        local house = Storages.Global.House.Suits[string.sub(card.Suit, 1, -2)]
+
         local suitLabel = Instance.new("TextLabel")
         suitLabel.AutomaticSize = Enum.AutomaticSize.X
         suitLabel.Size = UDim2.fromScale(0, .9)
         suitLabel.AnchorPoint = Vector2.new(.5, .5)
         suitLabel.BackgroundTransparency = 1
-        suitLabel.Text = symbols[card.Suit]
+        suitLabel.Text = house.Symbol
         suitLabel.TextScaled = true
-        suitLabel.TextColor3 = (card.Suit == "Hearts" or card.Suit == "Diamonds")
-            and Color3.fromRGB(255, 0, 0)
-            or Color3.fromRGB(0, 0, 0)
-        suitLabel.TextStrokeColor3 = (card.Suit == "Hearts" or card.Suit == "Diamonds")
-            and Color3.fromRGB(0, 0, 0)
-            or Color3.fromRGB(255, 255, 255)
+        suitLabel.TextColor3 = house.Color.Primary
+        suitLabel.TextStrokeColor3 = house.Color.Secondary
         suitLabel.TextStrokeTransparency = 0.5
         suitLabel.LayoutOrder = 1
         suitLabel.Parent = container
 
-        -- Rank label
         local rankLabel = Instance.new("TextLabel")
         rankLabel.AutomaticSize = Enum.AutomaticSize.X
         rankLabel.Size = UDim2.fromScale(0, .9)
@@ -208,8 +198,6 @@ function Table:DealToCommunity()
         rankLabel.TextStrokeTransparency = 0.5
         rankLabel.LayoutOrder = 2
         rankLabel.Parent = container
-
-        print(billboard)
     end)
 end
 

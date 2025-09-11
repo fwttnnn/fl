@@ -1,5 +1,40 @@
 --!strict
-local House = {}
+local House = {
+    Suits = {
+        Spade = {
+            Name = "Spade",
+            Symbol = "♠",
+            Color = {
+                Primary = Color3.fromRGB(0, 0, 0),
+                Secondary = Color3.fromRGB(255, 255, 255),
+            },
+        },
+        Club = {
+            Name = "Club",
+            Symbol = "♣",
+            Color = {
+                Primary = Color3.fromRGB(0, 0, 0),
+                Secondary = Color3.fromRGB(255, 255, 255),
+            }
+        },
+        Diamond = {
+            Name = "Diamond",
+            Symbol = "♦",
+            Color = {
+                Primary = Color3.fromRGB(255, 0, 0),
+                Secondary = Color3.fromRGB(0, 0, 0),
+            }
+        },
+        Heart = {
+            Name = "Heart",
+            Symbol = "♥",
+            Color = {
+                Primary = Color3.fromRGB(255, 0, 0),
+                Secondary = Color3.fromRGB(0, 0, 0),
+            }
+        },
+    },
+}
 
 local DataStoreService = game:GetService("DataStoreService")
 local Stores = {
@@ -7,27 +42,8 @@ local Stores = {
     Counter = DataStoreService:GetDataStore("Counter"),
 }
 
-local Houses = {
-    Spade = {
-        Name = "Spade",
-        Symbol = "♠",
-    },
-    Club = {
-        Name = "Club",
-        Symbol = "♣",
-    },
-    Diamond = {
-        Name = "Diamond",
-        Symbol = "♦",
-    },
-    Heart = {
-        Name = "Heart",
-        Symbol = "♥",
-    },
-}
-
 function House.Join(player: Player, house: string): boolean
-    if not Houses[house] then return false end
+    if not House.Suits[house] then return false end
 
     local success = pcall(function()
         Stores.House:SetAsync(player.UserId, house)
@@ -49,7 +65,7 @@ function House.Get(player: Player) -- TODO: return typeof house
         return Stores.House:GetAsync(player.UserId)
     end)
 
-    return Houses[house]
+    return House.Suits[house]
 end
 
 return House

@@ -11,12 +11,6 @@ local Table = require(Modules.Poker.Table)
 local Timer = require(Modules.Common.Timer)
 local Queue = require(Modules.Common.Queue)
 
-local Storages = {
-    Global = {
-        Chips = require(ServerStorage:WaitForChild("Storages").Global.Chips),
-    },
-}
-
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Events = {
     Match = {
@@ -37,32 +31,6 @@ local Events = {
 }
 
 function Match.new(players: {[number]: Player})
-    -- NOTE: minimum chips to enter
-    local stake = 500
-    local _players = {}
-
-    -- TODO: check if player can join before calling Match.new()
-    for _, player in ipairs(players) do
-        if Storages.Global.Chips.Get(player) - stake < 0 then
-            return nil
-        end
-    end
-
-    for _, player in ipairs(players) do
-        -- NOTE: cached remaining chips.
-        --       before entering, player should have enough chips to enter.
-        --       the script that calls Match.new() should check first.
-        local remaining = Storages.Global.Chips.Lose(player, stake)
-
-        table.insert(_players, {
-            Player = player,
-            Chips = {
-                Remaining = remaining,
-                Stake = stake,
-            },
-        })
-    end
-
     return setmetatable({
         Table = Table.new(_players),
         Turns = Queue.new(),
@@ -87,13 +55,12 @@ function Match:Start()
     self.Turns:Push({Type = "BT"})
     self.Turns:Push({Type = "SD"})
 
-    local winner = self:_Turn()
-    Storages.Global.Chips.Gain(winner, self.Table.Pot)
+    local winners = self:_Turn()
+    local draw = #winners > 1
 
-    -- NOTE: gain back chips on table.
-    --       at this point, the match should be disposed (wip, later we can restart)
-    for _, p in ipairs(self.Table.Players) do
-        Storages.Global.Chips.Gain(p.Player, p.Chips.Stake)
+    if draw then
+        -- NOTE: ???
+        return
     end
 
     self.Locked = true
@@ -101,8 +68,8 @@ function Match:Start()
     -- Storages.Memory.Matches.Remove(self)
 end
 
-function Match:_Turn(): Player
-    local winner = nil
+function Match:_Turn(): {[number]: Player}
+    local winners = {}
 
     while not self.Turns:IsEmpty() do
         local turn = self.Turns:Pop()
@@ -110,7 +77,7 @@ function Match:_Turn(): Player
             DP = function() self:_TurnPlayerDealing() end,
             DT = function() self:_TurnTableDealing(turn.Count) end,
             BT = function() self:_TurnBetting() end,
-            SD = function() winner = self:_TurnShowdown() end,
+            SD = function() winners = self:_TurnShowdown() end,
         }
 
         if self.Terminated then
@@ -121,7 +88,7 @@ function Match:_Turn(): Player
         handlers[turn.Type]()
     end
 
-    return winner
+    return winners
 end
 
 function Match:_BuildQueue(): Queue
@@ -198,14 +165,14 @@ function Match:_TurnBetting()
             BET = function(action)
                 local amount = action.Amount
                 if amount <= 0 then return false end
-                if _player.Chips.Stake < amount then return false end
+                if _player.Health < amount then return false end
                 if lastAction.Type == "BET" and amount <= lastAction.Amount then return false end
 
                 highestBet = amount
-                _player.Chips.Stake -= amount
+                _player.Health -= amount
                 self.Table.Pot += amount
 
-                if _player.Chips.Stake <= 0 then
+                if _player.Health <= 0 then
                     _player.Active = false
                 end
 
@@ -231,7 +198,7 @@ function Match:_TurnBetting()
                     end
                 end
 
-                print("[bet] pot increased", _player.Chips.Stake, self.Table.Pot)
+                print("[bet] pot increased", _player.Health, self.Table.Pot)
                 return true
             end,
 
@@ -239,31 +206,31 @@ function Match:_TurnBetting()
                 -- if not (lastAction.Type == "BET" or lastAction.Type == "CALL") then return false end
                 if lastAction.Type ~= "BET" and lastAction.Type ~= "CALL" then return false end
 
-                local amount = math.min(_player.Chips.Stake, highestBet)
+                local amount = math.min(_player.Health, highestBet)
                 if amount <= 0 then return false end
 
                 action.Amount = amount
-                _player.Chips.Stake -= amount
+                _player.Health -= amount
                 self.Table.Pot += amount
 
-                if _player.Chips.Stake <= 0 then
+                if _player.Health <= 0 then
                     _player.Active = false
                 end
 
-                print("[call] pot increased", _player.Chips.Stake, self.Table.Pot)
+                print("[call] pot increased", _player.Health, self.Table.Pot)
                 return true
             end,
 
             CHECK = function(action)
                 if lastAction.Type == "BET" or lastAction.Type == "CALL" then return false end
 
-                print("[check] game continues", _player.Chips.Stake, self.Table.Pot)
+                print("[check] game continues", _player.Health, self.Table.Pot)
                 return true
             end,
 
             FOLD = function(action)
                 _player.Active = false
-                print("[fold] player out", _player.Chips.Stake, self.Table.Pot)
+                print("[fold] player out", _player.Health, self.Table.Pot)
                 return true
             end,
         }
@@ -388,19 +355,27 @@ function Match:_TurnShowdown(): Player
         return a.Rank > b.Rank
     end)
 
+    local winners = {hands[1]}
+    for i = 2, #hands do
+        local highest = winners[1]
+        if hands[i].Rank ~= highest.Rank or hands[i].Score ~= highest.Score then break end
+
+        table.insert(winners, hands[i])
+    end
+
     print("table ::", self.Table.Cards.Community)
 
-    -- TODO: check for draws
-    local winner = hands[1]
-    print("[end] match ended, winner: (" .. winner.Player.DisplayName .. ") :: " .. winner.Rank .. " @ " ..  winner.Score)
-    print(winner.Hand)
+    for _, h in ipairs(winners) do
+        print("[end] match ended, winner: (" .. h.Player.DisplayName .. ") :: " .. h.Rank .. " @ " ..  h.Score)
+        print(h.Hand)
+    end
 
-    for i = 2, #hands do
+    for i = #winners + 1, #hands do
         print("[end] others: (" .. hands[i].Player.DisplayName .. ") :: " .. hands[i].Rank .. " @ " .. hands[i].Score)
         print(hands[i].Hand)
     end
 
-    return winner.Player
+    return winners
 end
 
 return Match
