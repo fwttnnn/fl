@@ -74,75 +74,78 @@ function Pile:SortBySuit()
     end)
 end
 
-function Pile:__RankedNOfAKind(n: number): boolean
-    local counts = {}
+function Pile:__RankedNOfAKind(n: number): {[number]: Card}?
+    local kinds = {}
+
     for _, card in ipairs(self.Cards) do
-        counts[card.Rank] = (counts[card.Rank] or 0) + 1
+        kinds[card.Rank] = kinds[card.Rank] or {}
+        table.insert(kinds[card.Rank], card)
     end
 
-    for _, count in pairs(counts) do
-        if count == n then
-            return true
+    for _, cards in pairs(kinds) do
+        if #cards == n then
+            return cards
         end
     end
 
-    return false
+    return nil
 end
 
-function Pile:_RankedRoyalFlush(): boolean
-    if self.Cards[1].Rank ~= "A" or self.Cards[2].Rank ~= "K" then
-        return false
-    end
+function Pile:_RankedHighCard(): {[number]: Card}?
+    local highest = self.Cards[1]
 
-    return self:_RankedStraight() and self:_RankedFlush()
-end
+    for i = 2, #self.Cards do
+        local card = self.Cards[i]
 
-function Pile:_RankedStraightFlush(): boolean
-    return self:_RankedStraight() and self:_RankedFlush()
-end
-
-function Pile:_RankedFourOfAKind(): boolean
-    return self:__RankedNOfAKind(4)
-end
-
-function Pile:_RankedFullHouse(): boolean
-    local counts = {}
-    for _, card in ipairs(self.Cards) do
-        counts[card.Rank] = (counts[card.Rank] or 0) + 1
-    end
-
-    local hasThreeOfAKind = false
-    local hasOnePair = false
-    for _, count in pairs(counts) do
-        if count == 3 then
-            hasThreeOfAKind = true
-        elseif count == 2 then
-            hasOnePair = true
+        if card:RankAsNumeric() > highest:RankAsNumeric() then
+            highest = card
         end
     end
 
-    return hasThreeOfAKind and hasOnePair
+    return {highest}
 end
 
-function Pile:_RankedFlush(): boolean
-    local suit: string = self.Cards[1].Suit
+function Pile:_RankedOnePair(): {[number]: Card}?
+    return self:__RankedNOfAKind(2)
+end
 
+function Pile:_RankedTwoPair(): {[number]: Card}?
+    local kinds = {}
     for _, card in ipairs(self.Cards) do
-        if card.Suit ~= suit then
-            return false
+        kinds[card.Rank] = kinds[card.Rank] or {}
+        table.insert(kinds[card.Rank], card)
+    end
+
+    local _pairs = {}
+    for _, cards in pairs(kinds) do
+        if #cards == 2 then
+            table.insert(_pairs, cards)
         end
     end
 
-    return true
-end
+    if #_pairs == 2 then
+        local _cards = {}
 
-function Pile:_RankedStraight(): boolean
-    -- Not enough cards to form a straight
-    if #self.Cards < 2 then
-        return false
+        for _, cards in ipairs(_pairs) do
+            -- I HATE THIS, FFS MAKE A LUA STANDARD LIBRARY.
+            for _, card in ipairs(cards) do
+                table.insert(_cards, card)
+            end
+        end
+
+        return _cards
     end
 
+    return nil
+end
+
+function Pile:_RankedThreeOfAKind(): {[number]: Card}?
+    return self:__RankedNOfAKind(3)
+end
+
+function Pile:_RankedStraight(): {[number]: Card}?
     local prevRank = self.Cards[1]:RankAsNumeric()
+    local cards = {self.Cards[1]} -- NOTE: redundant `cards` var, but.. that's what it is.
 
     for i = 2, #self.Cards do
         local card = self.Cards[i]
@@ -150,85 +153,90 @@ function Pile:_RankedStraight(): boolean
 
         -- NOTE: this assumes the cards are sorted in descending order
         if currentRank ~= prevRank - 1 then
-            return false
+            return nil
         end
 
         prevRank = currentRank
+        table.insert(cards, card)
     end
 
-    return true
+    return cards
 end
 
-function Pile:_RankedThreeOfAKind(): boolean
-    return self:__RankedNOfAKind(3)
-end
-
-function Pile:_RankedTwoPair(): boolean
-    local counts = {}
-    for _, card in ipairs(self.Cards) do
-        counts[card.Rank] = (counts[card.Rank] or 0) + 1
-    end
-
-    local pairCount = 0
-    for _, count in pairs(counts) do
-        if count == 2 then
-            pairCount += 1
-        end
-    end
-
-    return pairCount == 2
-end
-
-function Pile:_RankedOnePair(): boolean
-    return self:__RankedNOfAKind(2)
-end
-
-function Pile:_RankedHighCard(): boolean
-    -- WARNING: this function is not gonna be used.
-    assert(false)
-    return false
-end
-
-function _slice(tbl, start, stop)
-    assert(start <= stop and stop <= #tbl)
-    local sliced = {}
-
-    for i = start, stop do
-        table.insert(sliced, tbl[i])
-    end
-
-    return sliced
-end
-
-function _combinations(tbl, n)
-    assert(n >= 0 and n <= #tbl)
-    local results = {}
-
-    local function backtrack(start, combo)
-        if #combo == n then
-            table.insert(results, {table.unpack(combo)})
-            return
-        end
-
-        for i = start, #tbl do
-            table.insert(combo, tbl[i])
-            backtrack(i + 1, combo)
-            table.remove(combo)
-        end
-    end
-
-    backtrack(1, {})
-    return results
-end
-
-function Pile:Score(): number
-    local score = 0
+function Pile:_RankedFlush(): {[number]: Card}?
+    local suit: string = self.Cards[1].Suit
+    local cards = {self.Cards[1]} -- NOTE: redundant, but we need a shallow copy
 
     for _, card in ipairs(self.Cards) do
-        score += card:RankAsNumeric()
+        if card.Suit ~= suit then
+            return nil
+        end
+
+        table.insert(cards, card)
     end
 
-    return score
+    return cards
+end
+
+function Pile:_RankedFullHouse(): {[number]: Card}?
+    local kinds = {}
+    for _, card in ipairs(self.Cards) do
+        if not kinds[card.Rank] then
+            kinds[card.Rank] = {}
+        end
+        table.insert(kinds[card.Rank], card)
+    end
+
+    local threeOfAKind = nil
+    local pair = nil
+
+    for _, cards in pairs(kinds) do
+        if #cards == 3 and not threeOfAKind then
+            threeOfAKind = cards
+        elseif #cards == 2 and not pair then
+            pair = cards
+        end
+    end
+
+    if threeOfAKind and pair then
+        local cards = {}
+
+        for _, card in ipairs(threeOfAKind) do
+            table.insert(cards, card)
+        end
+
+        for _, card in ipairs(pair) do
+            table.insert(cards, card)
+        end
+
+        return cards
+    end
+
+    return nil
+end
+
+function Pile:_RankedFourOfAKind(): {[number]: Card}?
+    return self:__RankedNOfAKind(4)
+end
+
+function Pile:_RankedStraightFlush(): {[number]: Card}?
+    local straight = self:_RankedStraight()
+    if not straight then return nil end
+
+    local flush = self:_RankedFlush()
+    if not flush then return nil end
+
+    -- NOTE: either returning flush or straight works (assuming #self.Cards is always 5).
+    --       although, if #self.Cards > 5 then we need to re-check by creating a new pile from straight.
+    return flush
+end
+
+function Pile:_RankedRoyalFlush(): {[number]: Card}?
+    if self.Cards[1].Rank ~= "A" or self.Cards[2].Rank ~= "K" then
+        return nil
+    end
+
+    return self:_RankedStraightFlush()
 end
 
 function Pile:Best(cards: {Card}): {Card}
@@ -254,22 +262,105 @@ function Pile:Best(cards: {Card}): {Card}
     pileAces1SortedByRank:SortByRank()
     pileAces1SortedBySuit:SortBySuit()
 
+    local function isHandBetter(handA, handB): boolean
+        local rankA, rankB = handA.Rank, handB.Rank
+
+        if rankA.Tier ~= rankB.Tier then
+            return rankA.Tier > rankB.Tier
+        end
+
+        assert(#rankA.Cards == #rankB.Cards)
+        local n = #rankA.Cards
+
+        for i = 1, n do
+            local a = rankA.Cards[i]:RankAsNumeric()
+            local b = rankB.Cards[i]:RankAsNumeric()
+
+            if a ~= b then
+                return a > b
+            end
+        end
+
+        -- NOTE: get cards that's unused for rankings
+        local function kickers(pile, used)
+            local _used = {}
+            for _, c in ipairs(used) do
+                _used[c] = true
+            end
+
+            local _kickers = {}
+            for _, c in ipairs(pile.Cards) do
+                if not _used[c] then
+                    table.insert(_kickers, c)
+                end
+            end
+
+            -- NOTE: sadly, we need to sort it.
+            table.sort(_kickers, function(a, b)
+                return a:RankAsNumeric() > b:RankAsNumeric()
+            end)
+
+            return _kickers
+        end
+
+        local kickersA = kickers(handA.Pile, rankA.Cards)
+        local kickersB = kickers(handB.Pile, rankB.Cards)
+
+        assert(#kickersA == #kickersB)
+        local n = #kickersA
+
+        for i = 1, n do
+            local a = kickersA[i]:RankAsNumeric()
+            local b = kickersB[i]:RankAsNumeric()
+
+            if a ~= b then
+                return a > b
+            end
+        end
+
+        return false -- NOTE: ties
+    end
+
     local function bestPile(combinations)
-        local best = { pile = nil, rank = 0 }
+        local best = {Pile = nil, Rank = {Tier = 0, Cards = {}}}
 
         for _, cards in ipairs(combinations) do
-            -- TODO: THIS SUCKS, I ONLY NEED :RANK()
-            -- BUT, I HAVE TO CREATE A WHOLE NEW OBJECT.
-            local pile = Pile.new(cards)
-            local rank = pile:Rank()
+            -- NOTE: function :Rank() requires the cards to be sorted,
+            --       function isHandBetter() requires pile to be sorted too anyway.
+            --       although, this is not too concerning.
+            table.sort(cards, function(a, b) return a:RankAsNumeric() > b:RankAsNumeric() end)
 
-            if rank > best.rank then
-                best.pile = pile
-                best.rank = rank
+            local hand = Pile.new(cards)
+            local candidate = {Pile = hand,
+                               Rank = hand:Rank()}
+
+            if isHandBetter(candidate, best) then
+                best = candidate
             end
         end
 
         return best
+    end
+
+    local function _combinations(tbl, n)
+        assert(n >= 0 and n <= #tbl)
+        local results = {}
+
+        local function backtrack(start, combo)
+            if #combo == n then
+                table.insert(results, {table.unpack(combo)})
+                return
+            end
+
+            for i = start, #tbl do
+                table.insert(combo, tbl[i])
+                backtrack(i + 1, combo)
+                table.remove(combo)
+            end
+        end
+
+        backtrack(1, {})
+        return results
     end
 
     local pileAces14SortedByRankBest = bestPile(_combinations(pileAces14SortedByRank.Cards, 5))
@@ -277,37 +368,50 @@ function Pile:Best(cards: {Card}): {Card}
     local pileAces1SortedByRankBest  = bestPile(_combinations(pileAces1SortedByRank.Cards, 5))
     local pileAces1SortedBySuitBest  = bestPile(_combinations(pileAces1SortedBySuit.Cards, 5))
 
-    local best = pileAces14SortedByRankBest
-
+    local best = {Pile = nil, Rank = {Tier = 0, Cards = {}}}
     for _, candidate in ipairs({
         pileAces14SortedByRankBest,
         pileAces14SortedBySuitBest,
         pileAces1SortedByRankBest,
         pileAces1SortedBySuitBest,
     }) do
-        if candidate.rank > best.rank then
+        local _ = isHandBetter(candidate, best)
+        if _ then
             best = candidate
         end
     end
 
-    return best.pile.Cards
+    return best.Pile.Cards
 end
 
-function Pile:Rank(): number
-    -- TODO: RETURN THE VALUE OF RANKED HAND (FROM _RANKED* FN), IN CASE A PLAYER HAVE THE SAME RANK.
+function Pile:Rank(): {Tier: number, Cards: {Card}}
     -- NOTE: must be sorted, and pile size must be 5.
     assert(#self.Cards == 5, "Pile must have exactly 5 cards")
 
-    if self:_RankedRoyalFlush()    then return 10 end
-    if self:_RankedStraightFlush() then return 9 end
-    if self:_RankedFourOfAKind()   then return 8 end
-    if self:_RankedFullHouse()     then return 7 end
-    if self:_RankedFlush()         then return 6 end
-    if self:_RankedStraight()      then return 5 end
-    if self:_RankedThreeOfAKind()  then return 4 end
-    if self:_RankedTwoPair()       then return 3 end
-    if self:_RankedOnePair()       then return 2 end
-    return 1 -- NOTE: ranked high card
+    -- NOTE: rank order should be sorted by index (lowest to highest)
+    local ranks = {
+        self._RankedHighCard,      -- 1:  High Card
+        self._RankedOnePair,       -- 2:  One Pair
+        self._RankedTwoPair,       -- 3:  Two Pair
+        self._RankedThreeOfAKind,  -- 4:  Three of a Kind
+        self._RankedStraight,      -- 5:  Straight
+        self._RankedFlush,         -- 6:  Flush
+        self._RankedFullHouse,     -- 7:  Full House
+        self._RankedFourOfAKind,   -- 8:  Four of a Kind
+        self._RankedStraightFlush, -- 9:  Straight Flush
+        self._RankedRoyalFlush,    -- 10: Royal Flush
+    }
+
+    for i = #ranks, 1, -1 do
+        local cards = ranks[i](self)
+        if not cards then continue end
+
+        return {Tier = i,
+                Cards = cards}
+    end
+
+    assert(false, "this should not trigger.")
+    return nil
 end
 
 return Pile

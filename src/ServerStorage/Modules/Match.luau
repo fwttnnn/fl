@@ -380,13 +380,130 @@ function Match:_TurnShowdown()
                 print("[end] match ended by force, winner: (" .. _player.Player.DisplayName .. ")")
                 return {{Player = _player.Player,
                          Hand = nil,
-                         Rank = 0,
-                         Score = 0}}
+                         Rank = nil}}
             end
         end
 
         assert(false, "there should be 1 alive player")
         return {}
+    end
+
+    local function isHandEqual(handA, handB): boolean
+        local rankA, rankB = handA.Rank, handB.Rank
+
+        if rankA.Tier ~= rankB.Tier then
+            return rankA.Tier > rankB.Tier
+        end
+
+        assert(#rankA.Cards == #rankB.Cards)
+        local n = #rankA.Cards
+
+        for i = 1, n do
+            local a = rankA.Cards[i]:RankAsNumeric()
+            local b = rankB.Cards[i]:RankAsNumeric()
+
+            if a ~= b then
+                return false
+            end
+        end
+
+        -- NOTE: get cards that's unused for rankings
+        local function kickers(pile, used)
+            local _used = {}
+            for _, c in ipairs(used) do
+                _used[c] = true
+            end
+
+            local _kickers = {}
+            for _, c in ipairs(pile.Cards) do
+                if not _used[c] then
+                    table.insert(_kickers, c)
+                end
+            end
+
+            -- NOTE: sadly, we need to sort it.
+            table.sort(_kickers, function(a, b)
+                return a:RankAsNumeric() > b:RankAsNumeric()
+            end)
+
+            return _kickers
+        end
+
+        local kickersA = kickers(handA.Pile, rankA.Cards)
+        local kickersB = kickers(handB.Pile, rankB.Cards)
+
+        assert(#kickersA == #kickersB)
+        local n = #kickersA
+
+        for i = 1, n do
+            local a = kickersA[i]:RankAsNumeric()
+            local b = kickersB[i]:RankAsNumeric()
+
+            if a ~= b then
+                return false
+            end
+        end
+
+        return true
+    end
+
+        local function isHandBetter(handA, handB): boolean
+        local rankA, rankB = handA.Rank, handB.Rank
+
+        if rankA.Tier ~= rankB.Tier then
+            return rankA.Tier > rankB.Tier
+        end
+
+        assert(#rankA.Cards == #rankB.Cards)
+        local n = #rankA.Cards
+
+        for i = 1, n do
+            local a = rankA.Cards[i]:RankAsNumeric()
+            local b = rankB.Cards[i]:RankAsNumeric()
+
+            if a ~= b then
+                return a > b
+            end
+        end
+
+        -- NOTE: get cards that's unused for rankings
+        local function kickers(pile, used)
+            local _used = {}
+            for _, c in ipairs(used) do
+                _used[c] = true
+            end
+
+            local _kickers = {}
+            for _, c in ipairs(pile.Cards) do
+                if not _used[c] then
+                    table.insert(_kickers, c)
+                end
+            end
+
+            -- NOTE: sadly, we need to sort it.
+            table.sort(_kickers, function(a, b)
+                return a:RankAsNumeric() > b:RankAsNumeric()
+            end)
+
+            return _kickers
+        end
+
+        local kickersA = kickers(handA.Pile, rankA.Cards)
+        local kickersB = kickers(handB.Pile, rankB.Cards)
+
+        assert(#kickersA == #kickersB)
+        local n = #kickersA
+
+        for i = 1, n do
+            local a = kickersA[i]:RankAsNumeric()
+            local b = kickersB[i]:RankAsNumeric()
+
+            if a ~= b then
+                return a > b
+            end
+        end
+
+        return false -- NOTE: ties
     end
 
     local hands = {}
@@ -395,23 +512,19 @@ function Match:_TurnShowdown()
 
         local hand = Pile.new(_player.Hand:Best(self.Table.Cards.Community.Cards))
         table.insert(hands, {Player = _player.Player,
-                             Hand = hand,
-                             Rank = hand:Rank(),
-                             Score = hand:Score()})
+                             Pile = hand,
+                             Rank = hand:Rank()})
     end
 
     table.sort(hands, function(a, b)
-        if a.Rank == b.Rank then
-            return a.Score > b.Score
-        end
-
-        return a.Rank > b.Rank
+        return isHandBetter(a, b)
     end)
 
     local winners = {hands[1]}
     for i = 2, #hands do
-        local highest = winners[1]
-        if hands[i].Rank ~= highest.Rank or hands[i].Score ~= highest.Score then break end
+        if not isHandEqual(hands[i], winners[1]) then
+            break
+        end
 
         table.insert(winners, hands[i])
     end
@@ -419,13 +532,14 @@ function Match:_TurnShowdown()
     print("table ::", self.Table.Cards.Community)
 
     for _, h in ipairs(winners) do
-        print("[end] match ended, winner: (" .. h.Player.DisplayName .. ") :: " .. h.Rank .. " @ " ..  h.Score)
-        print(h.Hand)
+        print("[end/w] match ended, winner: (" .. h.Player.DisplayName .. ") :: " .. h.Rank.Tier .. " @", h.Rank.Cards)
+        print(h.Pile)
     end
 
     for i = #winners + 1, #hands do
-        print("[end] others: (" .. hands[i].Player.DisplayName .. ") :: " .. hands[i].Rank .. " @ " .. hands[i].Score)
-        print(hands[i].Hand)
+        local h = hands[i]
+        print("[end/o] match ended, others: (" .. h.Player.DisplayName .. ") :: " .. h.Rank.Tier .. " @", h.Rank.Cards)
+        print(h.Pile)
     end
 
     return winners

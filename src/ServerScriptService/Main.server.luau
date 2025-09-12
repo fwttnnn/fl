@@ -19,21 +19,6 @@ local __players = {}
 Players.PlayerAdded:Connect(function(player)
     table.insert(__players, player)
     Storages.Memory.Players.Load(player)
-
-    -- local match = Match.new({player, {UserId = 666}})
-    -- Storages.Memory.Matches.Add(match)
-
-    -- match.Table:Deal()
-    -- match.Table:Deal()
-    -- match.Table:Deal()
-    -- match.Table:Deal()
-    -- match.Table:Deal()
-
-    -- match.Table.Cards.Community:Push(Card.new("4", "Clubs"))
-    -- match.Table.Cards.Community:Push(Card.new("Q", "Diamonds"))
-    -- match.Table.Cards.Community:Push(Card.new("J", "Spades"))
-    -- match.Table.Cards.Community:Push(Card.new("10", "Spades"))
-    -- match.Table.Cards.Community:Push(Card.new("J", "Hearts"))
 end)
 
 -- NOTE: listen for players to join, for testing purposes.
