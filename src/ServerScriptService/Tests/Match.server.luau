@@ -35,9 +35,43 @@ function Test.IDontKnow()
     assert(winner.UserId == _p1.UserId, "expected p1 to win")
 end
 
+function Test.TableDealToCommunity()
+    local _p1 = {UserId = 1, DisplayName = "A"}
+    local _p2 = {UserId = 2, DisplayName = "B"}
+
+    local match = Match.new({_p1, _p2})
+
+    task.wait(3)
+
+    match.Table:Deal()
+    task.wait(2)
+    match.Table:Deal()
+    task.wait(2)
+    match.Table:Deal()
+    task.wait(2)
+    match.Table:Deal()
+    task.wait(2)
+    match.Table:Deal()
+end
+
+function Test.TableDealToPlayers()
+    local _p1 = {UserId = 1, DisplayName = "A"}
+    local _p2 = {UserId = 2, DisplayName = "B"}
+
+    local match = Match.new({_p1, _p2})
+
+    task.wait(3)
+
+    match.Table:Deal(_p1)
+    task.wait(2)
+    match.Table:Deal(_p1)
+end
+
 function Test.All()
     -- TODO: gather all functions (automatically) and fire it all here.
-    Test.IDontKnow()
+    -- Test.IDontKnow()
+    -- Test.TableDealToCommunity()
+    -- Test.TableDealToPlayers()
 end
 
 Test.All()

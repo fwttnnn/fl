@@ -117,13 +117,16 @@ function Table:DealToCommunity()
 
     card.Part.Anchored = true
     card.Part.Parent = inner
-    card.Part.Rotation = Vector3.new(0, -180, 0)
+
+    card.Part.Position = _board.CARDEXAMPLE.Position
+    -- card.Part.Rotation = Vector3.new(0, -180, 0)
+    card.Part.Rotation = Vector3.new(0, 90, 0)
 
     local leftEdge = inner.Position + Vector3.new(inner.Size.X / 2, 0, 0)
     local targetPos = leftEdge - Vector3.new(slotWidth * (nCards - 1) + (slotWidth / 2), 0, 0)
 
     local TweenService = game:GetService("TweenService")
-    local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+    local tweenInfo = TweenInfo.new(2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
     local tween = TweenService:Create(card.Part, tweenInfo, { Position = targetPos, Rotation = Vector3.new(0, 0, 0) })
 
     tween:Play()
@@ -202,7 +205,31 @@ end
 
 function Table:DealToPlayer(player: Player)
     local _player = self:GetPlayer(player)
-    _player.Hand:Push(self.Deck:Pop())
+    local card = self.Deck:Pop()
+
+    -- TODO: assign and get the player's seat
+    local _board = workspace.Development.Board
+    local seat = nil
+
+    local pos: Vector3 = _board.CARDLINE1.Position
+
+    card.Part.Position = _board.CARDEXAMPLE.Position
+    -- card.Part.Rotation = Vector3.new(0, -0, 0)  
+
+    local nCards = #_player.Hand.Cards
+    local cardSpacing = card.Part.Size.X * 0.2
+
+    -- local targetPos = leftEdge - Vector3.new(slotWidth * (nCards - 1) + (slotWidth / 2), 0, 0)
+    local targetPos = pos + Vector3.new((nCards * cardSpacing), 0, 0)
+
+    local TweenService = game:GetService("TweenService")
+    local tweenInfo = TweenInfo.new(2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+    local tween = TweenService:Create(card.Part, tweenInfo, { Position = targetPos, Rotation = Vector3.new(0, math.random(60, 120), 180) })
+
+    tween:Play()
+    workspace.Invisible.Sound:Play()
+
+    _player.Hand:Push(card)
 end
 
 function Table:Deal(player: Player?)
