@@ -37,10 +37,12 @@ function disableButtons()
     for _, obj in PlayerGui.ScreenGui.Buttons:GetDescendants() do
         if not obj:IsA("TextButton") then continue end
 
-        local button = obj
-        button.Visible = false
+        local button: TextButton = obj
         button.Active = false
         button.Interactable = false
+
+        local frame: Frame = button.Parent
+        frame.Visible = false
     end
 end
 
@@ -48,10 +50,12 @@ function enableButtons()
     for _, obj in PlayerGui.ScreenGui.Buttons:GetDescendants() do
         if not obj:IsA("TextButton") then continue end
 
-        local button = obj
-        button.Visible = true
+        local button: TextButton = obj
         button.Active = true
         button.Interactable = true
+
+        local frame: Frame = button.Parent
+        frame.Visible = true
     end
 end
 
@@ -68,21 +72,27 @@ end
 --
 
 local Buttons = {}
-for _, obj in PlayerGui.ScreenGui.Buttons:GetChildren() do 
+for _, obj in PlayerGui.ScreenGui.Buttons:GetDescendants() do 
     if not obj:IsA("TextButton") then continue end
 
-    Buttons[obj.Name] = {
-        GUI = obj,
+    local button: Button = obj
+    local name: string = button.Parent.Name
+
+    Buttons[name] = {
+        GUI = button,
         Connection = nil,
     }
 end
 
 Buttons.Upper = {}
-for _, obj in PlayerGui.ScreenGui.Buttons.Upper:GetChildren() do 
+for _, obj in PlayerGui.ScreenGui.Buttons.Upper:GetDescendants() do 
     if not obj:IsA("TextButton") then continue end
 
-    Buttons.Upper[obj.Name] = {
-        GUI = obj,
+    local button: Button = obj
+    local name: string = button.Parent.Name
+
+    Buttons.Upper[name] = {
+        GUI = button,
         Connection = nil,
     }
 end

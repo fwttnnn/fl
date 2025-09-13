@@ -212,14 +212,11 @@ function Table:DealToPlayer(player: Player)
     local seat = nil
 
     local pos: Vector3 = _board.CARDLINE1.Position
-
     card.Part.Position = _board.CARDEXAMPLE.Position
-    -- card.Part.Rotation = Vector3.new(0, -0, 0)  
 
     local nCards = #_player.Hand.Cards
     local cardSpacing = card.Part.Size.X * 0.2
 
-    -- local targetPos = leftEdge - Vector3.new(slotWidth * (nCards - 1) + (slotWidth / 2), 0, 0)
     local targetPos = pos + Vector3.new((nCards * cardSpacing), 0, 0)
 
     local TweenService = game:GetService("TweenService")
@@ -227,7 +224,7 @@ function Table:DealToPlayer(player: Player)
     local tween = TweenService:Create(card.Part, tweenInfo, { Position = targetPos, Rotation = Vector3.new(0, math.random(60, 120), 180) })
 
     local tweenT = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, 0, false, .6)
-    local tweenT1 = TweenService:Create(card.Part, tweenT, { Transparency = 1  })
+    local tweenT1 = TweenService:Create(card.Part, tweenT, { Transparency = 1 })
     local tweenT2 = TweenService:Create(card.Part.Decal, tweenT, { Transparency = 1 })
 
     tween:Play()

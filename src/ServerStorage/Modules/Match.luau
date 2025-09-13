@@ -216,27 +216,26 @@ function Match:_TurnBetting()
                     _player.Status = "All In"
                 end
 
-                -- NOTE: if a player past the first player bets
-                -- then, we go around.
+                -- NOTE: if a player bets (will always be higher than `highestBet`), we go around.
+                queue = Queue.new()
                 local playerIndex = self.Table:PlayerIndex(_player.Player)
-                if playerIndex > 1 then
-                    print("[debug] looping, rebuilding queue")
-                    queue = Queue.new()
 
-                    for i = playerIndex + 1, #self.Table.Players do
-                        local p = self.Table.Players[i]
-                        if not p.Status == "Alive" then continue end
+                for i = playerIndex + 1, #self.Table.Players do
+                    local p = self.Table.Players[i]
+                    if not p.Status == "Alive" then continue end
 
-                        queue:Push(p)
-                    end
-
-                    for i = 1, playerIndex - 1 do
-                        local p = self.Table.Players[i]
-                        if not p.Status == "Alive" then continue end
-
-                        queue:Push(p)
-                    end
+                    queue:Push(p)
                 end
+
+                for i = 1, playerIndex - 1 do
+                    local p = self.Table.Players[i]
+                    if not p.Status == "Alive" then continue end
+
+                    queue:Push(p)
+                end
+
+                print(queue:IsEmpty())
+                print(queue:Size())
 
                 print("[bet] pot increased", _player.Health, self.Table.Pot)
                 return true

@@ -38,6 +38,8 @@ function buildCards(handle: Part, cards: {[number]: Card}, cardSpacing: number)
         card.Massless = true
         card.Face.Texture = ""
         card.Face.Transparency = 0
+        card.Decal.Transparency = 0
+        card.Transparency = 0
         card.Parent = handle
 
         local offset = Vector3.new(
