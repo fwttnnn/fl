@@ -61,12 +61,12 @@ function Match:Start()
     local winners = self:_Turn()
     local draw = #winners > 1
 
-    local winner = winners[1]
+    local winner: Player = winners[1].Player
     if draw then winner = nil end
 
     for _, p in ipairs(self.Table.Players) do
         -- NOTE: client checks if the player is the same as their own uid.
-        Events.Match.Winner:FireClient(p.Player, winner.Player)
+        Events.Match.Winner:FireClient(p.Player, winner)
     end
 
     self.Locked = true
