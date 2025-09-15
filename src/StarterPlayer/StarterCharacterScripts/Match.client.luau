@@ -103,8 +103,7 @@ buttonLayouts.Check = function()
 
     Buttons.Middle.GUI.Text = "ALL IN"
     setButtonCallback(Buttons.Middle, function()
-        assert(health > 0)
-        Events.Match.Act:FireServer({Type = "BET", Amount = health})
+        Events.Match.Act:FireServer({Type = "ALL IN"})
     end)
 
     Buttons.Right.GUI.Text = "BET"
@@ -134,22 +133,21 @@ buttonLayouts.Call = function()
 
     Buttons.Middle.GUI.Text = "ALL IN"
     setButtonCallback(Buttons.Middle, function()
-        assert(health > 0)
-        Events.Match.Act:FireServer({Type = "BET", Amount = health})
+        Events.Match.Act:FireServer({Type = "ALL IN"})
     end)
 
     Buttons.Right.GUI.Text = "RAISE"
     setButtonCallback(Buttons.Right, function()
         -- TODO: create a user input
         assert(actions.Last.Amount ~= nil)
-        local amount = actions.Last.Amount + 10
+        local amount = 10
 
-        if health < amount then
+        if health < actions.Last.Amount + amount then
             print("[client/raise] cannot raise, you don't have enough health")
             return
         end
 
-        Events.Match.Act:FireServer({Type = "BET", Amount = amount})
+        Events.Match.Act:FireServer({Type = "RAISE", Amount = amount})
     end)
 
     Buttons.Upper.Right.GUI.Text = "FOLD"
@@ -160,6 +158,8 @@ end
 
 buttonLayouts.Fold = function() buttonLayouts[actions.Last.Type or "Default"]() end
 buttonLayouts.Bet = buttonLayouts.Call
+buttonLayouts["All In"] = buttonLayouts.Bet
+buttonLayouts["Raise"] = buttonLayouts.Bet
 buttonLayouts.Default = buttonLayouts.Check
 buttonLayouts.Default()
 
@@ -190,17 +190,30 @@ Events.Match.Acted.OnClientEvent:Connect(function(_health)
 end)
 
 Events.Match.Action.OnClientEvent:Connect(function(player, action)
-    if not action.Type then return print("[action]", player.DisplayName .. " did not acted") end
+    -- NOTE: why the hell doesn't lua have a standard library duddd..
+    -- SEE: http://lua-users.org/wiki/SciteTitleCase
+    local function capitalize(str: string): string
+        local buf = {}
+        local inWord = false
 
-    -- NOTE: only a word, why the hell doesn't lua have a standard library
-    local function capitalize(word: string): string
-        return (word:sub(1,1):upper() .. word:sub(2):lower())
+        for i = 1, #str do
+            local c = string.sub(str, i, i)
+            if inWord then
+                table.insert(buf, string.lower(c))
+                if string.find(c, '%s') then
+                    inWord = false
+                end
+            else
+                table.insert(buf, string.upper(c))
+                inWord = true
+            end
+        end
+
+        return table.concat(buf)
     end
 
     action.Type = capitalize(action.Type)
     buttonLayouts[action.Type]()
-
-    print("[action]", player.DisplayName .. " acted " .. action.Type, action.Amount)
 
     if action.Type == "Fold" then
         return

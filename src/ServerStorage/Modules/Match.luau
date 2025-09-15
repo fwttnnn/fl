@@ -211,17 +211,18 @@ function Match:_TurnBetting()
         local actionHandlers = {
             BET = function(action)
                 local amount = action.Amount
-                if amount <= 0 then return false end
-                if _player.Health < amount then return false end
 
-                if (lastAction.Type == "BET" or lastAction.Type == "CALL") and amount <= lastAction.Amount then return false end
-                if highestBet ~= 0 and amount <= highestBet then return false end
+                if amount <= highestBet then return false end
+                if amount <= 0 then return false end
+
+                if _player.Health < amount then return false end
 
                 highestBet = amount
                 _player.Health -= amount
                 self.Table.Pot += amount
 
                 if _player.Health <= 0 then
+                    action.Type = "ALL IN"
                     _player.Status = "All In"
                 end
 
@@ -253,16 +254,15 @@ function Match:_TurnBetting()
                 --     if actionLabel then actionLabel:Destroy() end
                 -- end
 
-                print(queue:IsEmpty())
-                print(queue:Size())
-
                 print("[bet] pot increased", _player.Health, self.Table.Pot)
                 return true
             end,
 
             CALL = function(action)
-                -- if not (lastAction.Type == "BET" or lastAction.Type == "CALL") then return false end
-                if lastAction.Type ~= "BET" and lastAction.Type ~= "CALL" then return false end
+                -- NOTE: prevent calling first turn.
+                if not lastAction.Type then return false end
+
+                if lastAction.Type == "CHECK" then return false end
 
                 local amount = math.min(_player.Health, highestBet)
                 if amount <= 0 then return false end
@@ -272,6 +272,7 @@ function Match:_TurnBetting()
                 self.Table.Pot += amount
 
                 if _player.Health <= 0 then
+                    action.Type = "ALL IN"
                     _player.Status = "All In"
                 end
 
@@ -280,7 +281,7 @@ function Match:_TurnBetting()
             end,
 
             CHECK = function(action)
-                if lastAction.Type == "BET" or lastAction.Type == "CALL" then return false end
+                if lastAction.Type and lastAction.Type ~= "CHECK" then return false end
 
                 print("[check] game continues", _player.Health, self.Table.Pot)
                 return true
@@ -293,11 +294,25 @@ function Match:_TurnBetting()
             end,
         }
 
+        -- NOTE: we have to do these nasty out of the object thing whatever dood..
+        actionHandlers["ALL IN"] = function(action)
+            -- NOTE: we can just use BET, but it won't go through cuz
+            --       we can't BET the same as `highestBet`.
+            if _player.Health <= highestBet then
+                return actionHandlers["CALL"](action)
+            end
+
+            action.Amount = _player.Health
+            return actionHandlers["BET"](action)
+        end
+
+        -- NOTE: ah yes, another one why not dood..
+        actionHandlers["RAISE"] = function(action)
+            action.Amount = highestBet + action.Amount
+            return actionHandlers["BET"](action)
+        end
+
         local acted = Instance.new("BindableEvent")
-        local _action = {
-            Type = nil,
-            Amount = nil,
-        }
 
         local actEventConnection
         local timerFinishedConnection
@@ -311,11 +326,6 @@ function Match:_TurnBetting()
 
             local accepted = handler(action)
             if not accepted then return end
-
-            _action = {
-                Type = action.Type,
-                Amount = action.Amount,
-            }
 
             lastAction = {
                 Type = action.Type,
@@ -393,9 +403,13 @@ function Match:_TurnBetting()
         actionLabel.TextScaled = true
         actionLabel.Text = lastAction.Type
 
+        if lastAction.Amount and lastAction.Type ~= "ALL IN" then
+            actionLabel.Text = lastAction.Type .. " " .. lastAction.Amount
+        end
+
         for _, p in ipairs(self.Table.Players) do
             if p.Id == _player.Id then continue end
-            Events.Match.Action:FireClient(p.Player, _player.Player, _action)
+            Events.Match.Action:FireClient(p.Player, _player.Player, lastAction)
         end
 
         actEventConnection:Disconnect()
