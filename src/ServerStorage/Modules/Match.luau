@@ -327,16 +327,17 @@ function Match:_TurnPlayerDealing()
         local _player = queue:Pop()
         assert(_player.Status == "Alive")
 
+        task.wait(1)
         self.Table:Deal(_player.Player)
-        task.wait(4)
+        task.wait(1)
         self.Table:Deal(_player.Player)
     end
 end
 
 function Match:_TurnTableDealing(count: number)
     for i = 1, count do
-        self.Table:Deal()
         task.wait(.65)
+        self.Table:Deal()
     end
 end
 
