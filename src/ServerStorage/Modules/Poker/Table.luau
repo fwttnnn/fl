@@ -248,7 +248,12 @@ function Table:Deal(player: Player?)
         end,
     }
 
-    local _ =  player and dealings["Player"](player) or dealings["Community"]()
+    if player then
+        dealings["Player"](player)
+        return
+    end
+
+    dealings["Community"]()
 end
 
 return Table

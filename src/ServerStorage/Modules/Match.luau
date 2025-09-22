@@ -248,7 +248,7 @@ function Match:Rematch(): {[number]: Player}
         local p = self.Table:Get({UserId = id})
         if not p then continue end
 
-        table.insert(_playersJoined, p)
+        table.insert(_playersJoined, p.Player)
     end
 
     return _playersJoined

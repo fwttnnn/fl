@@ -18,11 +18,11 @@ function Test.IDontKnow()
     match.Table.Cards.Community:Push(Card.new("10", "Spades"))
     match.Table.Cards.Community:Push(Card.new("J", "Hearts"))
 
-    local _player1 = match.Table:Get(p1)
+    local _player1 = match.Table:Get(_p1)
     _player1.Hand:Push(Card.new("6", "Clubs"))
     _player1.Hand:Push(Card.new("6", "Hearts"))
 
-    local _player2 = match.Table:Get(p2)
+    local _player2 = match.Table:Get(_p2)
     _player2.Hand:Push(Card.new("6", "Hearts"))
     _player2.Hand:Push(Card.new("3", "Diamonds"))
 
