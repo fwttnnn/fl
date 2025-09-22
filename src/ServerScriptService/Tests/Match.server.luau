@@ -7,9 +7,6 @@ local Modules = ServerStorage:WaitForChild("Modules")
 local Card = require(Modules.Poker.Card)
 local Match = require(Modules.Match)
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-require(ReplicatedStorage.Modules.Extensions.Table)
-
 function Test.IDontKnow()
     local _p1 = {UserId = 1, DisplayName = "A"}
     local _p2 = {UserId = 2, DisplayName = "B"}
@@ -21,11 +18,11 @@ function Test.IDontKnow()
     match.Table.Cards.Community:Push(Card.new("10", "Spades"))
     match.Table.Cards.Community:Push(Card.new("J", "Hearts"))
 
-    local _player1 = table._find(match.Table.Players, function(p) return p.Player.UserId == _p1.UserId end)
+    local _player1 = match.Table:Get(p1)
     _player1.Hand:Push(Card.new("6", "Clubs"))
     _player1.Hand:Push(Card.new("6", "Hearts"))
 
-    local _player2 = table._find(match.Table.Players, function(p) return p.Player.UserId == _p2.UserId end)
+    local _player2 = match.Table:Get(p2)
     _player2.Hand:Push(Card.new("6", "Hearts"))
     _player2.Hand:Push(Card.new("3", "Diamonds"))
 

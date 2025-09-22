@@ -2,12 +2,9 @@
 -- matches storage, keep track of all the matchs (local server scope)
 local Storage = {}
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-require(ReplicatedStorage.Modules.Extensions.Table)
-
 function Storage.Find(player: Player): Match
     for _, match in ipairs(Storage) do
-        local p = table._find(match.Table.Players, function(p) return p.Player == player end)
+        local p = match.Table:Get(player)
         if not p then continue end
 
         return match

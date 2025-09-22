@@ -13,9 +13,6 @@ local Deck = require(Modules.Poker.Deck)
 local Card = require(Modules.Poker.Card)
 local Hand = require(Modules.Poker.Hand)
 
--- table.*
-require(ReplicatedStorage.Modules.Extensions.Table)
-
 local Storages = {
     Global = {
         House = require(ServerStorage:WaitForChild("Storages").Global.House),
@@ -91,6 +88,25 @@ function Table:Destroy()
     _board.Deck:Destroy()
     _board.CommunityCardsUnion.Gugugaga:Destroy()
     _board.CommunityCardsUnion:Destroy()
+end
+
+function Table:Get(player: Player)
+    return _table.find(self.Players, function(p)
+        return p.Id == player.UserId
+    end)
+end
+
+function Table:Index(player: Player)
+    return _table.index(self.Players, function(p)
+        return p.Id == player.UserId
+    end)
+end
+
+function Table:Remove(player: Player)
+    local index = self:Index(player)
+    if index <= 0 then return end
+
+    table.remove(self.Players, index)
 end
 
 function Table:Deal(player: Player?)
@@ -196,7 +212,7 @@ function Table:Deal(player: Player?)
             end)
         end,
         ["Player"] = function(player: Player)
-            local _player = table._find(self.Players, function(p) return p.Player == player end)
+            local _player = self:Get(player)
             local card = self.Deck:Pop()
 
             -- TODO: assign and get the player's seat
@@ -230,7 +246,7 @@ function Table:Deal(player: Player?)
         end,
     }
 
-    player and dealings["Player"](player) or dealings["Community"]()
+    local _ =  player and dealings["Player"](player) or dealings["Community"]()
 end
 
 return Table

@@ -1,6 +1,7 @@
 --!strict
+local _table = {}
 
-function table.filter(tbl, fn)
+function _table.filter(tbl: {any}, fn: (any) -> boolean): {any}
     local result = {}
 
     for i, v in ipairs(tbl) do
@@ -12,7 +13,7 @@ function table.filter(tbl, fn)
     return result
 end
 
-function table._find(tbl, fn)
+function _table.find(tbl: {any}, fn: (any) -> boolean): any
     for i, v in ipairs(tbl) do
         if fn(v) then
             return v
@@ -22,7 +23,7 @@ function table._find(tbl, fn)
     return nil
 end
 
-function table.index(tbl, fn)
+function _table.index(tbl: {any}, fn: (any) -> boolean): number
     for i, v in ipairs(tbl) do
         if fn(v) then
             return i
@@ -31,3 +32,5 @@ function table.index(tbl, fn)
 
     return 0
 end
+
+return _table

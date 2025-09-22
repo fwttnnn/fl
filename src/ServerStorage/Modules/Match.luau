@@ -17,8 +17,6 @@ local Native = {
 }
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-require(ReplicatedStorage.Modules.Extensions.Table)
-
 local Events = {
     Match = {
         Rematch = {
@@ -60,10 +58,7 @@ function Match.new(players: {[number]: Player})
 
     -- TODO(priority): disconnect this connection. (maybe make something like :Destroy())?
     match.__conn = Players.PlayerRemoving:Connect(function(player: Player)
-        local index = table.index(match.Table.Players, function(p) return p.Player == player end)
-        if index <= 0 then return end
-
-        table.remove(match.Table.Players, index)
+        match.Table:Remove(player)
     end)
 
     return match
@@ -250,7 +245,7 @@ function Match:Rematch(): {[number]: Player}
 
     local _playersJoined = {}
     for id, _ in pairs(_players.Joins) do
-        local p = table._find(self.Table.Players, function(p) return p.Player.UserId == id end)
+        local p = self.Table:Get({UserId = id})
         if not p then continue end
 
         table.insert(_playersJoined, p)
@@ -487,7 +482,7 @@ function Match:_TurnBetting()
 
                 -- NOTE: if a player bets (will always be higher than `highestBet`), we go around.
                 queue = Queue.new()
-                local playerIndex = table.index(self.Table.Players, function(p) return p.Player == _player.Player end)
+                local playerIndex = self.Table:Index(_player.Player)
                 assert(playerIndex > 0)
 
                 for i = playerIndex + 1, #self.Table.Players do
@@ -669,7 +664,7 @@ function Match:_TurnBetting()
         end
 
         __disconnect()
-        self.__last = table.index(self.Table.Players, function(p) return p.Player == _player.Player end)
+        self.__last = self.Table:Index(_player.Player)
     end
 
     -- NOTE: should jump into showdown
