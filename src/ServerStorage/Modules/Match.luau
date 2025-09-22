@@ -44,7 +44,7 @@ local Storages = {
 }
 
 function Match.new(players: {[number]: Player})
-    assert(#players <= 1, "are you 5?")
+    assert(#players >= 2, "are you 5?")
 
     local match = setmetatable({
         Table = Table.new(players),
