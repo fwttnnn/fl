@@ -5,6 +5,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Modules = ServerStorage:WaitForChild("Modules")
 local Card = require(Modules.Poker.Card)
 
+-- table.*
+require(ReplicatedStorage.Modules.Extensions.Table)
+
 local Functions = {
     Hand = {
         Equip = ReplicatedStorage.Functions.Hand.Equip,
@@ -83,7 +86,7 @@ Functions.Hand.Equip.OnServerInvoke = function(player: Player)
 
     local match = Storages.Memory.Matches.Find(player)
     if match then
-        local _player = match.Table:GetPlayer(player)
+        local _player = table._find(match.Table.Players, function(p) return p.Player == player end)
         cards = _player.Hand.Cards
     end
 
