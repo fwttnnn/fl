@@ -44,11 +44,8 @@ local Storages = {
 }
 
 function Match.new(players: {[number]: Player})
-    assert(#players >= 2, "are you 5?")
-
     local match = setmetatable({
         Table = Table.new(players),
-        Turns = Queue.new(),
         Timer = Timer.new(),
         -- TODO: as enum.
         Status = "Going",
@@ -71,24 +68,32 @@ function Match:Start()
     -- cannot happen, but idk..
     if #self.Table.Players <= 1 then return end
 
-    self.Turns = Queue.new()
-    self.Turns:Push({Type = "DP"})
-    self.Turns:Push({Type = "BT"})
-    self.Turns:Push({Type = "DT", Count = 3})
-    self.Turns:Push({Type = "BT"})
-    self.Turns:Push({Type = "DT", Count = 1})
-    self.Turns:Push({Type = "BT"})
-    self.Turns:Push({Type = "DT", Count = 1})
-    self.Turns:Push({Type = "BT"})
-    self.Turns:Push({Type = "SD"})
+    local turns = Queue.new()
+    turns:Push({Type = "DP"})
+    turns:Push({Type = "BT"})
+    turns:Push({Type = "DT", Count = 3})
+    turns:Push({Type = "BT"})
+    turns:Push({Type = "DT", Count = 1})
+    turns:Push({Type = "BT"})
+    turns:Push({Type = "DT", Count = 1})
+    turns:Push({Type = "BT"})
+    turns:Push({Type = "SD"})
 
-    local winners = self:_Turn()
+    local winners = self:_Turn(turns)
 
     self:__RemoveAllPlayersActionBillboard()
     self:__AddWinnerBillboard(winners)
 
     -- TODO: ehh, do we remove it this quick? players can't view their hand anymore.
     -- Storages.Memory.Matches.Remove(self)
+end
+
+function Match:Reset(players: {[number]: Player})
+    self.Table:Destroy()
+
+    self.Table = Table.new(players)
+    self.Status = "Going"
+    self.__last = #players
 end
 
 function Match:__AddPlayerIcons()
@@ -142,7 +147,7 @@ function Match:__RemovePlayerIcons()
 end
 
 -- NOTE: prompt rematch to all players.
-function Match:Rematch()
+function Match:Rematch(): {[number]: Player}
     if #self.Table.Players <= 1 then return end
 
     for _, p in (self.Table.Players) do
@@ -227,6 +232,9 @@ function Match:Rematch()
     -- NOTE: blocking, waiting for all players to ready.
     ready.Event:Wait()
 
+    self.Timer:Stop()
+    self.Timer:Reset()
+
     connections.Join:Disconnect()
     connections.Quit:Disconnect()
     connections.Timer.Progression:Disconnect()
@@ -234,6 +242,13 @@ function Match:Rematch()
 
     task.wait(2)
     self:__RemovePlayerIcons()
+
+    local _playersJoined = {}
+    for id, _ in pairs(_players.Joins) do
+        table.insert(_playersJoined, self.Table:GetPlayer({ UserId = id }).Player)
+    end
+
+    return _playersJoined
 end
 
 function Match:__GetPlayerBillboardWrapper(player: Player): Frame
@@ -316,15 +331,15 @@ function Match:__AddWinnerBillboard(winners)
     end
 end
 
-function Match:_Turn(): {[number]: Player}
+function Match:_Turn(turns: Queue): {[number]: Player}
     local winners = {}
 
     for _, p in ipairs(self.Table.Players) do
         Events.Match.Turn.Started:FireClient(p.Player, p.Health)
     end
 
-    while not self.Turns:IsEmpty() do
-        local turn = self.Turns:Pop()
+    while not turns:IsEmpty() do
+        local turn = turns:Pop()
         local handlers = {
             DP = function() self:_TurnPlayerDealing() end,
             DT = function() self:_TurnTableDealing(turn.Count) end,
@@ -619,6 +634,7 @@ function Match:_TurnBetting()
         end
         Events.Match.Turn.Betting.Act:FireClient(_player.Player, _player.Health)
 
+        self.Timer:Stop()
         self.Timer:Reset()
         self.Timer:Start(20)
 

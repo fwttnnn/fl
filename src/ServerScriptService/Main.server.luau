@@ -22,25 +22,43 @@ Players.PlayerAdded:Connect(function(player)
     end)
 end)
 
--- NOTE: listen for players to join, for testing purposes.
-task.spawn(function()
-    while true do
-        task.wait(0.5)
-        if #__players < 2 then continue end
-        task.wait(4)
+while true do
+    task.wait(0.5)
+    if #__players < 2 then continue end
 
-        local p2 = table.remove(__players)
-        local p1 = table.remove(__players)
+    local p2 = table.remove(__players)
+    local p1 = table.remove(__players)
 
+    task.spawn(function()
         -- TODO: remove this, just wait for it to load on some script
         Storages.Memory.Players.Load(p1)
         Storages.Memory.Players.Load(p2)
 
         local match = Match.new({p1, p2})
         Storages.Memory.Matches.Add(match)
-        match:Start()
 
-        task.wait(3)
-        match:Rematch()
-    end
-end)
+        local function _start()
+            match:Start()
+
+            -- NOTE: players disconnected
+            if #match.Table.Players <= 1 then
+                Storages.Memory.Matches.Remove(match)
+                match.Table:Destroy() -- TODO: ...
+                return
+            end
+
+            task.wait(3)
+            local players = match:Rematch()
+            if #players <= 1 then
+                Storages.Memory.Matches.Remove(match)
+                match.Table:Destroy() -- TODO: ...
+                return
+            end
+
+            match:Reset(players)
+            _start()
+        end
+
+        _start()
+    end)
+end

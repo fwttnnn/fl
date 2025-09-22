@@ -3,6 +3,7 @@ local Deck = {}
 Deck.__index = Deck
 
 function Deck.new()
+    -- TODO(priority): this clones a card, we need the pos.
     local template: Part = workspace.Development.Board.DECKEXAMPLE
     local part: Part = template:Clone()
 

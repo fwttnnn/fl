@@ -20,6 +20,8 @@ local Storages = {
 }
 
 function Table.new(players: {[number]: Player})
+    assert(#players >= 2, "are you 5?")
+
     local _players = {}
     for _, player in ipairs(players) do
         table.insert(_players, {
@@ -67,7 +69,6 @@ function Table.new(players: {[number]: Player})
 
     inner.Parent = union
     outer:Destroy()
-    print(union)
 
     return setmetatable({
         Players = _players,
@@ -78,6 +79,15 @@ function Table.new(players: {[number]: Player})
             Burned = Hand.new(),
         }
     }, Table)
+end
+
+-- TODO: this *should* destroy the whole board, currently, it doesn't.
+function Table:Destroy()
+    local _board = workspace.Development.Board
+
+    _board.Deck:Destroy()
+    _board.CommunityCardsUnion.Gugugaga:Destroy()
+    _board.CommunityCardsUnion:Destroy()
 end
 
 function Table:PlayerIndex(player: Player): number
