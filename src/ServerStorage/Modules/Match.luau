@@ -480,15 +480,8 @@ function Match:_TurnBetting()
                     queue:Push(p)
                 end
 
-                -- NOTE: rebuilding queue means a new betting round (kinda, then we reset everyone's action label.
-                -- for _, _p in ipairs(self.Table.Players) do
-                --     local character = _p.Player.Character or _p.Player.CharacterAdded:Wait()
-                --     local head: Head = character:WaitForChild("Head")
-                --     local wrapper: Frame = head:WaitForChild("Billboard").Frame.Wrapper
-
-                --     local actionLabel = wrapper:FindFirstChild("Action")
-                --     if actionLabel then actionLabel:Destroy() end
-                -- end
+                -- NOTE: rebuilding queue means a new betting round (then we reset everyone's action label?).
+                -- self:__RemoveAllPlayersActionBillboard()
 
                 print("[bet] pot increased", _player.Health, self.Table.Pot)
                 return true
