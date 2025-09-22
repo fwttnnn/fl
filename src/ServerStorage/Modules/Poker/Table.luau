@@ -3,6 +3,8 @@ local Table = {}
 Table.__index = Table
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local _table = require(ReplicatedStorage.Modules.Extension.Table)
+
 local Objects = ReplicatedStorage:WaitForChild("Objects")
 local Cards = Objects.Cards
 
