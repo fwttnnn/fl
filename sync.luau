@@ -2,7 +2,7 @@ local net = require("@lune/net")
 local roblox = require("@lune/roblox")
 local fs = require("@lune/fs")
 
-local PLACE_ID = 100523856012906
+local PLACE_ID = 111691578946103
 local cookie = roblox.getAuthCookie()
 assert(cookie, "Failed to get auth cookie")
 
