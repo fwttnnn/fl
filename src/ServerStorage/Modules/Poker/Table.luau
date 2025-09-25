@@ -259,7 +259,7 @@ function Table:Deal(player: Player?)
             local TweenService = game:GetService("TweenService")
             local tweenInfo = TweenInfo.new(2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 
-            local _rot = Vector3.new(_blank.Rotation.X, math.random(0, 120), _blank.Rotation.Y)
+            local _rot = Vector3.new(_blank.Rotation.X, math.random(0, 120), _blank.Rotation.Z)
             local tween = TweenService:Create(_blank, tweenInfo, { Position = targetPos, Rotation = _rot })
 
             local tweenT = TweenInfo.new(.5, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, 0, false, .6)

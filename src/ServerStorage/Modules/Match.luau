@@ -6,6 +6,8 @@ local Players = game:GetService("Players")
 local ServerStorage = game:GetService("ServerStorage")
 local Modules = ServerStorage:WaitForChild("Modules")
 
+local Dialog = require(Modules.Dialog)
+
 local Hand = require(Modules.Poker.Hand)
 local Table = require(Modules.Poker.Table)
 

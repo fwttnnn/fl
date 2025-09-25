@@ -2,14 +2,16 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local _table = require(ReplicatedStorage.Modules.Extension.Table)
 
+local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 
 local ServerStorage = game:GetService("ServerStorage")
 local Modules = ServerStorage:WaitForChild("Modules")
 
+local Dialog = require(Modules.Dialog)
+
 local Match = require(Modules.Match)
 local Table = require(Modules.Poker.Table)
-local Timer = require(Modules.Common.Timer)
 
 local Storages = {
     Memory = {
@@ -33,79 +35,46 @@ for _, t in ipairs(tables:GetChildren()) do
     local seats: Folder = board.Seats
     local billboard: BillboardGui = t.Billboard
 
-    local timer = Timer.new()
     local anims = {}
     local players = {}
 
     local match
 
-    local function __BillboardSetVisible()
-        billboard.Frame.Visible = true
-    end
-
-    local function __BillboardSetInvisible()
-        billboard.Frame.Visible = false
-    end
-
-    local function __AddPlayerIcon(player: Player)
-        local frame: Frame = ReplicatedStorage.Icon:Clone()
-        local image: ImageLabel = frame.ImageLabel
-
-        local _p = nil -- NOTE: this should be fine, idk..
-        while not _p do _p = Storages.Memory.Players.Get(player) end
-
-        local icon: string = _p.Icon
-        image.Image = icon
-
-        frame.Name = player.UserId
-        frame.Parent = billboard.Frame
-    end
-
-    function __RemovePlayerIcon(player: Player)
-        local frame: Frame = billboard.Frame:FindFirstChild(tostring(player.UserId))
-        if not frame then return end
-
-        frame:Destroy()
-    end
-
-    function __RemoveAllPlayersIcon()
-        for _, p in ipairs(players) do
-            __RemovePlayerIcon(p)
-        end
-    end
-
-    Players.PlayerRemoving:Connect(function(player: Player)
-        __RemovePlayerIcon(player)
-        table.remove(players, _table.index(players, function(p) return p == player end))
-        local empty = #players == 0
-
-        if empty then
-            if not match then
-                __BillboardSetInvisible()
+    local function setModelTransparency(model, transparency)
+        for _, part in ipairs(model:GetDescendants()) do
+            if not (part:IsA("BasePart") or part:IsA("Decal")) then
+                continue
             end
 
-            timer:Stop()
-            timer:Reset()
+            part.Transparency = transparency
         end
-    end)
+    end
 
-    timer.Progression.Timid:Connect(function(sec)
-        if match then return end
-        print("match starting in:", sec)
-    end)
+    local _board = workspace.Development.Tables.Board
+    local _dealer = _board.Dealer
+    local _head = _dealer.Head
 
-    timer.Finished:Connect(function()
-        if match then return end
-        if #players <= 1 then
-            timer:Reset()
-            timer:Start(5)
-            return
+    local _rings = {}
+    local _bell = _board.Bell
+    _bell.ClickDetector.MouseClick:Connect(function(player: Player)
+        _rings[player] = true
+        workspace.Invisible.SFX.Bell:Play()
+
+        local count = 0
+        for k, v in pairs(_rings) do
+            count += 1
         end
 
-        __RemoveAllPlayersIcon()
-        __BillboardSetInvisible()
+        if count < 2 then return end
+        if #players < 2 then return end
+
+        if match then return end
+        _rings = {}
 
         task.spawn(function()
+            setModelTransparency(_dealer.Hands.Pointing, 1)
+            setModelTransparency(_dealer.Hands.Resting, 0)
+
             for _, p in ipairs(players) do
                 Storages.Memory.Players.Load(p)
             end
@@ -128,15 +97,59 @@ for _, t in ipairs(tables:GetChildren()) do
             --       starting the game again, soon.
             match.Table:Destroy()
             match = nil
+        end)
+    end)
 
-            __BillboardSetVisible()
-            for _, p in ipairs(players) do
-                __AddPlayerIcon(p)
+    -- axis can be "X", "Y", or "Z"
+    local function createHover(part, hoverHeight, hoverTime, axis)
+        hoverHeight = hoverHeight or 0.145
+        hoverTime = hoverTime or 2
+        axis = axis or "Y"  -- default to vertical hover
+
+        if part:IsA("BasePart") then
+            local originalCFrame = part.CFrame
+
+            -- Determine hover offset vector based on axis
+            local offset = Vector3.new(0, 0, 0)
+            if axis == "X" then
+                offset = Vector3.new(hoverHeight, 0, 0)
+            elseif axis == "Y" then
+                offset = Vector3.new(0, hoverHeight, 0)
+            elseif axis == "Z" then
+                offset = Vector3.new(0, 0, hoverHeight)
+            else
+                warn("Invalid axis! Use 'X', 'Y', or 'Z'. Defaulting to Y.")
+                offset = Vector3.new(0, hoverHeight, 0)
             end
 
-            timer:Reset()
-            timer:Start(5)
-        end)
+            local tweenInfo = TweenInfo.new(
+                hoverTime,
+                Enum.EasingStyle.Sine,
+                Enum.EasingDirection.InOut,
+                -1,  -- repeat infinitely
+                true  -- reverse automatically
+            )
+            local goal = {CFrame = originalCFrame * CFrame.new(offset)}
+            local tween = TweenService:Create(part, tweenInfo, goal)
+            tween:Play()
+            return tween
+        end
+    end
+
+    for _, part in ipairs(_head:GetChildren()) do
+        createHover(part, 0.145, 2, "Y")
+    end
+
+    for _, part in ipairs(_dealer.Hands.Pointing:GetChildren()) do
+        createHover(part, 0.145, 2, "Z")
+    end
+
+    Players.PlayerRemoving:Connect(function(player: Player)
+        table.remove(players, _table.index(players, function(p) return p == player end))
+        local empty = #players == 0
+
+        setModelTransparency(_dealer.Hands.Pointing, 1)
+        setModelTransparency(_dealer.Hands.Resting, 0)
     end)
 
     for _, model in ipairs(seats:GetChildren()) do
@@ -151,18 +164,19 @@ for _, t in ipairs(tables:GetChildren()) do
             local player = game.Players:GetPlayerFromCharacter(humanoid.Parent)
             if not player then return end
 
+            workspace.Invisible.SFX.Dash:Play()
+
             local empty = #players == 0
             table.insert(players, player)
 
-            if empty then
-                timer:Stop()
-                timer:Reset()
-                timer:Start(5)
-            end
+            local full = #players == 2
+            if full then
+                _rings = {}
+                setModelTransparency(_dealer.Hands.Pointing, 0)
+                setModelTransparency(_dealer.Hands.Resting, 1)
 
-            if not match then
-                __BillboardSetVisible()
-                __AddPlayerIcon(player)
+                local _label = _head.Dialog.Frame.Label
+                Dialog.Show(_label, "Ring the bell..")
             end
 
             local animator = humanoid:WaitForChild("Animator")
@@ -179,18 +193,11 @@ for _, t in ipairs(tables:GetChildren()) do
             local player = game.Players:GetPlayerFromCharacter(humanoid.Parent)
             if not player then return end
             
-            __RemovePlayerIcon(player)
             table.remove(players, _table.index(players, function(p) return p == player end))
             local empty = #players == 0
 
-            if empty then
-                if not match then
-                    __BillboardSetInvisible()
-                end
-
-                timer:Stop()
-                timer:Reset()
-            end
+            setModelTransparency(_dealer.Hands.Pointing, 1)
+            setModelTransparency(_dealer.Hands.Resting, 0)
 
             anims[player.UserId]:Stop()
             anims[player.UserId]:Remove()
