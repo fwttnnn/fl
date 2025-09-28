@@ -25,6 +25,7 @@ local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
 local health = 0
+local bet = 10
 local actions = {
     -- NOTE: action 'Fold' will never appear here.
     Last = {
@@ -97,6 +98,52 @@ for _, obj in PlayerGui.ScreenGui.Buttons.Upper:GetDescendants() do
     }
 end
 
+Buttons.Arrows = {}
+for _, obj in PlayerGui.ScreenGui.Buttons.Arrows:GetDescendants() do 
+    if not obj:IsA("TextButton") then continue end
+
+    local button: Button = obj
+    local name: string = button.Parent.Name
+
+    Buttons.Arrows[name] = {
+        GUI = button,
+        Connection = nil,
+    }
+end
+
+local function _first_word(str: string): string
+    local space_index = string.find(str, " ")
+    if space_index then
+        return string.sub(str, 1, space_index - 1)
+    end
+    
+    return str 
+end
+
+setButtonCallback(Buttons.Arrows.Increase, function()
+    bet += 5
+
+    if bet > 100 then
+        bet = 100
+    end
+
+    if bet > health then
+        bet = health
+    end
+
+    Buttons.Right.GUI.Text = _first_word(Buttons.Right.GUI.Text) .. " " .. bet
+end)
+
+setButtonCallback(Buttons.Arrows.Decrease, function()
+    bet -= 1
+
+    if bet < 0 then
+        bet = 0
+    end
+
+    Buttons.Right.GUI.Text = _first_word(Buttons.Right.GUI.Text) .. " " .. bet
+end)
+
 -- NOTE: naming based on last action
 local buttonLayouts = {}
 
@@ -111,17 +158,10 @@ buttonLayouts.Check = function()
         Events.Match.Turn.Betting.Act:FireServer({Type = "ALL IN"})
     end)
 
-    Buttons.Right.GUI.Text = "BET"
+    Buttons.Right.GUI.Text = "BET" .. " " .. bet
     setButtonCallback(Buttons.Right, function()
-        -- TODO: create a user input
-        local amount = 10
-
-        if health < amount then
-            print("[client/bet] cannot bet, you don't have enough health")
-            return
-        end
-
-        Events.Match.Turn.Betting.Act:FireServer({Type = "BET", Amount = amount})
+        Events.Match.Turn.Betting.Act:FireServer({Type = "BET", Amount = bet})
+        bet = 10
     end)
 
     Buttons.Upper.Right.GUI.Text = "FOLD"
@@ -141,18 +181,12 @@ buttonLayouts.Call = function()
         Events.Match.Turn.Betting.Act:FireServer({Type = "ALL IN"})
     end)
 
-    Buttons.Right.GUI.Text = "RAISE"
+    Buttons.Right.GUI.Text = "RAISE" .. " " .. bet
     setButtonCallback(Buttons.Right, function()
         -- TODO: create a user input
         assert(actions.Last.Amount ~= nil)
-        local amount = 10
-
-        if health < actions.Last.Amount + amount then
-            print("[client/raise] cannot raise, you don't have enough health")
-            return
-        end
-
-        Events.Match.Turn.Betting.Act:FireServer({Type = "RAISE", Amount = amount})
+        Events.Match.Turn.Betting.Act:FireServer({Type = "RAISE", Amount = bet})
+        bet = 10
     end)
 
     Buttons.Upper.Right.GUI.Text = "FOLD"

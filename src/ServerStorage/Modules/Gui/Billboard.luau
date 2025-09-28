@@ -202,7 +202,6 @@ function Billboard.Remove(player: Player, _type, arg: any)
         [Billboard.Types.Winner] = function()
             local wrapper = Billboard.Wrapper(player)
             local label = wrapper:FindFirstChild(Billboard.Types.Winner)
-            print(wrapper, label)
             if not label then return end
 
             label:Destroy()

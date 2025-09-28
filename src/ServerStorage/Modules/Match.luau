@@ -91,7 +91,7 @@ function Match:Start()
     local draw = #winners > 1
 
     for _, w in ipairs(winners) do
-        Billboard.Add(w.Player, Billboard.Types.Action, draw)
+        Billboard.Add(w.Player, Billboard.Types.Winner, draw)
     end
     for _, p in ipairs(self.Table.Players) do
         Billboard.Remove(p.Player, Billboard.Types.Action)
@@ -178,14 +178,18 @@ function Match:_TurnBetting()
         Amount = nil,
     }
 
+    -- TODO: this is used for checking if one player is alive,
+    --       we need another function to actually do that.
     local function isEveryoneAllIn(): boolean
+        local count = 0
+
         for _, _player in ipairs(self.Table.Players) do
-            if _player.Status ~= "All In" then
-                return false
+            if _player.Status == "All In" then
+                count += 1
             end
         end
 
-        return true
+        return count >= #self.Table.Players - 1
     end
 
     -- NOTE: funny, this also checks if there's only 1 player left.
