@@ -84,8 +84,8 @@ end
 
 function Test.BillboardHealth()
     Billboard.Add(me, Billboard.Types.Health)
-    -- task.wait(2)
-    -- Billboard.Update(player, Billboard.Types.Health, 20)
+    task.wait(2)
+    Billboard.Update(me, Billboard.Types.Health, 20)
 end
 
 function Test.All()
@@ -94,7 +94,7 @@ function Test.All()
     -- Test.TableDealToCommunity()
     -- Test.TableDealToPlayers()
 
-    -- Test.BillboardHealth()
+    Test.BillboardHealth()
 end
 
 Test.All()

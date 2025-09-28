@@ -65,14 +65,18 @@ function Billboard.Attach(player: Player)
     local wrapper = Instance.new("Frame", frame)
     wrapper.Name = "Wrapper"
     wrapper.BackgroundTransparency = 1
-    wrapper.Size = UDim2.fromScale(1, .25)
+    wrapper.Size = UDim2.fromScale(1, .5)
 
     local layout = layout:Clone()
     layout.Parent = wrapper
 
-    local nametag = Instance.new("TextLabel", frame)
-    nametag.Name = "Nametag"
-    nametag.Size = UDim2.fromScale(1, .5)
+    local nametagWrapper = wrapper:Clone()
+    nametagWrapper.Name = "Nametag"
+    nametagWrapper.Parent = frame
+
+    local nametag = Instance.new("TextLabel", nametagWrapper)
+    nametag.Name = "Label"
+    nametag.Size = UDim2.fromScale(1, 1)
     nametag.BackgroundTransparency = 1
     nametag.Text = player.DisplayName
 
@@ -151,12 +155,28 @@ function Billboard.Add(player: Player, _type, arg: any)
             local healthWrapper = Instance.new("Frame", wrapper)
             healthWrapper.Name = Billboard.Types.Health
             healthWrapper.BackgroundTransparency = 1
-            healthWrapper.Size = UDim2.fromScale(.7, .4)
+            healthWrapper.Size = UDim2.fromScale(.7, .3)
             healthWrapper.LayoutOrder = 9999 -- this should always be at the bottom
 
+            Instance.new("UIStroke", healthWrapper)
+            Instance.new("UICorner", healthWrapper).CornerRadius = UDim.new(.25)
+
             local healthBar = Instance.new("Frame", healthWrapper)
+            healthBar.BorderSizePixel = 0
+            healthBar.BackgroundColor3 = Color3.fromRGB(177, 0, 3)
+            healthBar.BackgroundTransparency = .3
             healthBar.Name = "Bar"
             healthBar.Size = UDim2.fromScale(1, 1)
+
+            local healthText = Instance.new("TextLabel", healthWrapper)
+            healthText.Name = "Label"
+            healthText.TextStrokeTransparency = 0
+            healthText.BackgroundTransparency = 1
+            healthText.Text = "100 / 100"
+            healthText.TextColor3 = Color3.fromRGB(255, 255, 255)
+            healthText.TextScaled = true
+            healthText.Size = UDim2.fromScale(1, 1)
+            print(healthBar)
         end,
     }
     
@@ -233,6 +253,9 @@ function Billboard.Update(player: Player, _type, arg: any)
 
             local healthBar = healthWrapper.Bar
             healthBar.Size = UDim2.fromScale(health / 100, 1)
+
+            local healthText = healthWrapper.Label
+            healthText.Text = health .. " / 100"
         end,
     }
 
