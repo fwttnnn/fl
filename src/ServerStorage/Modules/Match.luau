@@ -144,6 +144,29 @@ function Match:_BuildQueue(): Queue
     return queue
 end
 
+function Match:_RebuildQueue(from: Player): Queue
+    local queue = Queue.new()
+
+    local playerIndex = self.Table:Index(from)
+    assert(playerIndex > 0)
+
+    for i = playerIndex + 1, #self.Table.Players do
+        local p = self.Table.Players[i]
+        if p.Status ~= "Alive" then continue end
+
+        queue:Push(p)
+    end
+
+    for i = 1, playerIndex - 1 do
+        local p = self.Table.Players[i]
+        if p.Status ~= "Alive" then continue end
+
+        queue:Push(p)
+    end
+
+    return queue
+end
+
 function Match:_TurnPlayerDealing()
     local queue = self:_BuildQueue()
 
@@ -181,15 +204,13 @@ function Match:_TurnBetting()
     -- TODO: this is used for checking if one player is alive,
     --       we need another function to actually do that.
     local function isEveryoneAllIn(): boolean
-        local count = 0
-
         for _, _player in ipairs(self.Table.Players) do
-            if _player.Status == "All In" then
-                count += 1
+            if _player.Status ~= "All In" then
+                return false
             end
         end
 
-        return count >= #self.Table.Players - 1
+        return true
     end
 
     -- NOTE: funny, this also checks if there's only 1 player left.
@@ -257,23 +278,7 @@ function Match:_TurnBetting()
                 end
 
                 -- NOTE: if a player bets (will always be higher than `highestBet`), we go around.
-                queue = Queue.new()
-                local playerIndex = self.Table:Index(_player.Player)
-                assert(playerIndex > 0)
-
-                for i = playerIndex + 1, #self.Table.Players do
-                    local p = self.Table.Players[i]
-                    if p.Status ~= "Alive" then continue end
-
-                    queue:Push(p)
-                end
-
-                for i = 1, playerIndex - 1 do
-                    local p = self.Table.Players[i]
-                    if p.Status ~= "Alive" then continue end
-
-                    queue:Push(p)
-                end
+                queue = self:_RebuildQueue(_player.Player)
 
                 -- NOTE: rebuilding queue means a new betting round (then we reset everyone's action label?).
                 -- self:__RemoveAllPlayersActionBillboard()
@@ -323,7 +328,12 @@ function Match:_TurnBetting()
             -- NOTE: we can just use BET, but it won't go through cuz
             --       we can't BET the same as `highestBet`.
             if _player.Health <= highestBet then
-                return actionHandlers["CALL"](action)
+                if actionHandlers["CALL"](action) then
+                    queue = self:_RebuildQueue(_player.Player)
+                    return true
+                end
+
+                return false
             end
 
             action.Amount = _player.Health
