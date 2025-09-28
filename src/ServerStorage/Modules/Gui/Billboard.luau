@@ -113,7 +113,7 @@ function Billboard.Add(player: Player, _type, arg: any)
             local label = Instance.new("TextLabel", wrapper)
             label.Name = Billboard.Types.Action
             label.BackgroundTransparency = 1
-            label.Size = UDim2.fromScale(1, 1)
+            label.Size = UDim2.fromScale(1, .4)
             label.TextScaled = true
             label.Text = action.Type
 
@@ -134,20 +134,16 @@ function Billboard.Add(player: Player, _type, arg: any)
             timerProgressBar.Size = UDim2.fromScale(1, 1)
         end,
 
-        [Billboard.Types.Winner] = function(winners)
-            local draw = #winners > 1
+        [Billboard.Types.Winner] = function(draw)
             local text = draw and "DRAW" or "WINNER"
+            local wrapper: Frame = Billboard.Wrapper(player)
 
-            for _, w in ipairs(winners) do
-                local wrapper: Frame = Billboard.Wrapper(w.Player)
-
-                local label = Instance.new("TextLabel", wrapper)
-                label.Name = Billboard.Types.Winner
-                label.BackgroundTransparency = 1
-                label.Size = UDim2.fromScale(1, 1)
-                label.TextScaled = true
-                label.Text = text
-            end
+            local label = Instance.new("TextLabel", wrapper)
+            label.Name = Billboard.Types.Winner
+            label.BackgroundTransparency = 1
+            label.Size = UDim2.fromScale(1, .4)
+            label.TextScaled = true
+            label.Text = text
         end,
 
         [Billboard.Types.Health] = function()
@@ -176,7 +172,6 @@ function Billboard.Add(player: Player, _type, arg: any)
             healthText.TextColor3 = Color3.fromRGB(255, 255, 255)
             healthText.TextScaled = true
             healthText.Size = UDim2.fromScale(1, 1)
-            print(healthBar)
         end,
     }
     
@@ -207,6 +202,7 @@ function Billboard.Remove(player: Player, _type, arg: any)
         [Billboard.Types.Winner] = function()
             local wrapper = Billboard.Wrapper(player)
             local label = wrapper:FindFirstChild(Billboard.Types.Winner)
+            print(wrapper, label)
             if not label then return end
 
             label:Destroy()

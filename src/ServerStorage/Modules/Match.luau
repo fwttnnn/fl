@@ -88,16 +88,21 @@ function Match:Start()
     end
 
     local winners = self:_Turn(turns)
+    local draw = #winners > 1
 
+    for _, w in ipairs(winners) do
+        Billboard.Add(w.Player, Billboard.Types.Action, draw)
+    end
     for _, p in ipairs(self.Table.Players) do
         Billboard.Remove(p.Player, Billboard.Types.Action)
-        Billboard.Add(nil, Billboard.Types.Winner, winners)
     end
 
     task.wait(5)
     for _, p in ipairs(self.Table.Players) do
         Billboard.Remove(p.Player, Billboard.Types.Health)
-        Billboard.Remove(p.Player, Billboard.Types.Winner)
+    end
+    for _, w in ipairs(winners) do
+        Billboard.Remove(w.Player, Billboard.Types.Winner)
     end
 end
 

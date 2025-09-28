@@ -88,12 +88,18 @@ function Test.BillboardHealth()
     Billboard.Update(me, Billboard.Types.Health, 20)
 end
 
+function Test.BillboardAction()
+    Billboard.Add(me, Billboard.Types.Health)
+    Billboard.Add(me, Billboard.Types.Action, { Type = "CHECK", Amount = nil })
+end
+
 function Test.All()
     -- TODO: gather all functions (automatically) and fire it all here.
     -- Test.IDontKnow()
     -- Test.TableDealToCommunity()
     -- Test.TableDealToPlayers()
     -- Test.BillboardHealth()
+    -- Test.BillboardAction()
 end
 
 Test.All()
