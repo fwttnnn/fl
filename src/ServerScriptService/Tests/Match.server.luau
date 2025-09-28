@@ -93,8 +93,7 @@ function Test.All()
     -- Test.IDontKnow()
     -- Test.TableDealToCommunity()
     -- Test.TableDealToPlayers()
-
-    Test.BillboardHealth()
+    -- Test.BillboardHealth()
 end
 
 Test.All()
