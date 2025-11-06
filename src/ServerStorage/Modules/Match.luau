@@ -51,7 +51,7 @@ function Match.new(players: {[number]: Player})
         Table = Table.new(players),
         Timer = Timer.new(),
         -- TODO: as enum.
-        Status = "Going",
+        State = "Going",
 
         -- NOTE: the last player to move.
         __last = #players,
@@ -122,7 +122,7 @@ function Match:_Turn(turns: Queue): {[number]: Player}
             SD = function() winners = self:_TurnShowdown() end,
         }
 
-        if self.Status == "Everyone Folded" then
+        if self.State == "Everyone Folded" then
             handlers["SD"]()
             break
         end
@@ -152,14 +152,14 @@ function Match:_RebuildQueue(from: Player): Queue
 
     for i = playerIndex + 1, #self.Table.Players do
         local p = self.Table.Players[i]
-        if p.Status ~= "Alive" then continue end
+        if not p.Status["Alive"] then continue end
 
         queue:Push(p)
     end
 
     for i = 1, playerIndex - 1 do
         local p = self.Table.Players[i]
-        if p.Status ~= "Alive" then continue end
+        if not p.Status["Alive"] then continue end
 
         queue:Push(p)
     end
@@ -172,7 +172,7 @@ function Match:_TurnPlayerDealing()
 
     for _ = 1, queue:Size() do
         local _player = queue:Pop()
-        assert(_player.Status == "Alive")
+        assert(_player.Status["Alive"])
 
         task.wait(1)
         self.Table:Deal(_player.Player)
@@ -191,8 +191,7 @@ end
 function Match:_TurnBetting()
     -- NOTE: kinda unnecessary, but ig it's O(1) rather than O(n)
     --       also, this check is cleaner tho
-    if self.Status == "Everyone All In" then return end
-    assert(self.Status == "Going")
+    if self.State ~= "Going" then return end
 
     local queue = self:_BuildQueue()
     local highestBet = 0
@@ -201,11 +200,9 @@ function Match:_TurnBetting()
         Amount = nil,
     }
 
-    -- TODO: this is used for checking if one player is alive,
-    --       we need another function to actually do that.
     local function isEveryoneAllIn(): boolean
         for _, _player in ipairs(self.Table.Players) do
-            if _player.Status ~= "All In" then
+            if not _player.Status["All In"] then
                 return false
             end
         end
@@ -213,12 +210,22 @@ function Match:_TurnBetting()
         return true
     end
 
-    -- NOTE: funny, this also checks if there's only 1 player left.
     local function isEveryoneExceptOneFolded(): number
         local count = 0
 
         for _, _player in ipairs(self.Table.Players) do
-            if _player.Status == "Folded" then continue end
+            if _player.Status["Folded"] then continue end
+            count += 1
+        end
+
+        return count == 1
+    end
+
+    local function isEveryoneExceptOneAlive(): number
+        local count = 0
+
+        for _, _player in ipairs(self.Table.Players) do
+            if not _player.Status["Alive"] then continue end
             count += 1
         end
 
@@ -227,37 +234,31 @@ function Match:_TurnBetting()
 
     -- NOTE: should jump into showdown
     if isEveryoneExceptOneFolded() then
-        self.Status = "Everyone Folded"
+        self.State = "Everyone Folded"
         return
     end
 
     if isEveryoneAllIn() then
-        self.Status = "Everyone All In"
+        self.State = "Everyone All In"
+        return
+    end
+
+    if isEveryoneExceptOneAlive() then
+        -- idk, should go off
+        self.State = "Everyone Except One Alive"
         return
     end
 
     for _, _player in ipairs(self.Table.Players) do
         Billboard.Remove(_player.Player, Billboard.Types.Action)
 
-        if _player.Status ~= "Alive" then continue end
+        if not _player.Status["Alive"] then continue end
         Events.Match.Turn.Betting.Started:FireClient(_player.Player)
     end
 
     while not queue:IsEmpty() do
-        if isEveryoneExceptOneFolded() then
-            -- NOTE: should jump into showdown
-            self.Status = "Everyone Folded"
-            return
-        end
-
-        -- NOTE: just to be sure
-        if isEveryoneAllIn() then
-            self.Status = "Everyone All In"
-            return
-        end
-
         local _player = queue:Pop()
-        if _player.Status ~= "Alive" then continue end
+        if not _player.Status["Alive"] then continue end
 
         local actionHandlers = {
             BET = function(action)
@@ -274,7 +275,9 @@ function Match:_TurnBetting()
 
                 if _player.Health <= 0 then
                     action.Type = "ALL IN"
-                    _player.Status = "All In"
+
+                    _player.Status["Alive"] = false
+                    _player.Status["All In"] = true
                 end
 
                 -- NOTE: if a player bets (will always be higher than `highestBet`), we go around.
@@ -302,7 +305,9 @@ function Match:_TurnBetting()
 
                 if _player.Health <= 0 then
                     action.Type = "ALL IN"
-                    _player.Status = "All In"
+
+                    _player.Status["Alive"] = false
+                    _player.Status["All In"] = true
                 end
 
                 print("[call] pot increased", _player.Health, self.Table.Pot)
@@ -317,7 +322,9 @@ function Match:_TurnBetting()
             end,
 
             FOLD = function(action)
-                _player.Status = "Folded"
+                _player.Status["Alive"] = false
+                _player.Status["Folded"] = true
+
                 print("[fold] player out", _player.Health, self.Table.Pot)
                 return true
             end,
@@ -328,12 +335,7 @@ function Match:_TurnBetting()
             -- NOTE: we can just use BET, but it won't go through cuz
             --       we can't BET the same as `highestBet`.
             if _player.Health <= highestBet then
-                if actionHandlers["CALL"](action) then
-                    queue = self:_RebuildQueue(_player.Player)
-                    return true
-                end
-
-                return false
+                return actionHandlers["CALL"](action)
             end
 
             action.Amount = _player.Health
@@ -361,14 +363,21 @@ function Match:_TurnBetting()
             if connections.Timer.Finished then    connections.Timer.Finished:Disconnect() end
         end
 
+        local _locked = false
         connections.Act = Events.Match.Turn.Betting.Act.OnServerEvent:Connect(function(player: Player, action)
             if player ~= _player.Player then return end
+            if _locked then return end
+
+            _locked = true
 
             local handler = actionHandlers[action.Type]
             if not handler then return end
 
             local accepted = handler(action)
-            if not accepted then return end
+            if not accepted then
+                _locked = false
+                return
+            end
 
             lastAction = {
                 Type = action.Type,
@@ -455,21 +464,27 @@ function Match:_TurnBetting()
 
     -- NOTE: should jump into showdown
     if isEveryoneExceptOneFolded() then
-        self.Status = "Everyone Folded"
+        self.State = "Everyone Folded"
         return
     end
 
     if isEveryoneAllIn() then
-        self.Status = "Everyone All In"
+        self.State = "Everyone All In"
+        return
+    end
+
+    if isEveryoneExceptOneAlive() then
+        -- idk, should go off
+        self.State = "Everyone Except One Alive"
         return
     end
 end
 
 function Match:_TurnShowdown()
     -- NOTE: ended by folds
-    if self.Status == "Everyone Folded" then
+    if self.State == "Everyone Folded" then
         for _, _player in ipairs(self.Table.Players) do
-            if _player.Status ~= "Folded" then
+            if not _player.Status["Folded"] then
                 print("[end] match ended by force, winner: (" .. _player.Player.DisplayName .. ")")
                 return {{Player = _player.Player,
                          Hand = nil,
@@ -483,7 +498,7 @@ function Match:_TurnShowdown()
 
     local hands = {}
     for _, _player in ipairs(self.Table.Players) do
-        if _player.Status == "Folded" then continue end
+        if _player.Status["Folded"] then continue end
 
         local hand = Hand.new(_player.Hand:Best(self.Table.Cards.Community.Cards))
         table.insert(hands, {Player = _player.Player,

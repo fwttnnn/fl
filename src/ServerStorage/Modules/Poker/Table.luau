@@ -30,7 +30,11 @@ function Table.new(players: {[number]: Player})
             Id = player.UserId,
             Player = player,
             -- TODO: make this an enum
-            Status = "Alive",
+            Status = {
+                ["Alive"]  = true,
+                ["Folded"] = false,
+                ["All In"] = false,
+            },
             Health = 100,
             Hand = Hand.new(), 
         })
@@ -102,7 +106,7 @@ function Table:Add(player: Player)
         Id = player.UserId,
         Player = player,
         -- TODO: make this an enum
-        Status = "Waiting",
+        State = "Waiting",
         Health = 100,
         Hand = Hand.new(), 
     })

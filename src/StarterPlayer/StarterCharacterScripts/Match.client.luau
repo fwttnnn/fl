@@ -120,6 +120,10 @@ local function _first_word(str: string): string
     return str 
 end
 
+local function _update_right_button()
+    Buttons.Right.GUI.Text = _first_word(Buttons.Right.GUI.Text) .. " " .. bet
+end
+
 setButtonCallback(Buttons.Arrows.Increase, function()
     bet += 5
 
@@ -131,7 +135,7 @@ setButtonCallback(Buttons.Arrows.Increase, function()
         bet = health
     end
 
-    Buttons.Right.GUI.Text = _first_word(Buttons.Right.GUI.Text) .. " " .. bet
+    _update_right_button()
 end)
 
 setButtonCallback(Buttons.Arrows.Decrease, function()
@@ -141,7 +145,7 @@ setButtonCallback(Buttons.Arrows.Decrease, function()
         bet = 0
     end
 
-    Buttons.Right.GUI.Text = _first_word(Buttons.Right.GUI.Text) .. " " .. bet
+    _update_right_button()
 end)
 
 -- NOTE: naming based on last action
