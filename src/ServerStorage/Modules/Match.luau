@@ -138,6 +138,8 @@ function Match:_BuildQueue(): Queue
 
     for i = 1, #self.Table.Players do
         local p = self.Table.Players[((self.__last + i - 1) % #self.Table.Players) + 1]
+        if not p.Status["Alive"] then continue end
+
         queue:Push(p)
     end
 
