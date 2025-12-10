@@ -38,8 +38,7 @@ local House = {
 
 local DataStoreService = game:GetService("DataStoreService")
 local Stores = {
-    House = DataStoreService:GetDataStore("House"),
-    Counter = DataStoreService:GetDataStore("Counter"),
+    House = DataStoreService:GetDataStore("--house"),
 }
 
 function House.Join(player: Player, house: string): boolean

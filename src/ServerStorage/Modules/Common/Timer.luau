@@ -51,7 +51,9 @@ function Timer:Start(duration)
 
             -- Tick every 0.25s
             if elapsed >= nextTick then
-                self.Events.Progression.Tick:Fire(1 - elapsed / duration)
+                local remaining = math.ceil(duration - elapsed)
+                -- self.Events.Progression.Tick:Fire(1 - elapsed / duration)
+                self.Events.Progression.Tick:Fire(remaining)
                 nextTick = nextTick + 0.25
             end
 

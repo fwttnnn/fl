@@ -82,15 +82,14 @@ function Test.TableDealToPlayers()
     match.Table:Deal(_p2)
 end
 
-function Test.BillboardHealth()
-    Billboard.Add(me, Billboard.Types.Health)
-    task.wait(2)
-    Billboard.Update(me, Billboard.Types.Health, 20)
+function Test.BillboardAction()
+    Billboard.Add(me, Billboard.Types.Action, { Type = "CHECK", Amount = nil })
 end
 
-function Test.BillboardAction()
-    Billboard.Add(me, Billboard.Types.Health)
-    Billboard.Add(me, Billboard.Types.Action, { Type = "CHECK", Amount = nil })
+function Test.BillboardNew()
+    print(Billboard.Root(me))
+    Billboard.Add(me, Billboard.Types.Stars)
+    -- Billboard.Add(me, Billboard.Types.Action, { Type = "CHECK", Amount = nil })
 end
 
 function Test.All()
@@ -100,6 +99,7 @@ function Test.All()
     -- Test.TableDealToPlayers()
     -- Test.BillboardHealth()
     -- Test.BillboardAction()
+    Test.BillboardNew()
 end
 
 Test.All()

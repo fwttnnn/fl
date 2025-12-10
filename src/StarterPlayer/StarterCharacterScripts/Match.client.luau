@@ -162,7 +162,7 @@ buttonLayouts.Check = function()
         Events.Match.Turn.Betting.Act:FireServer({Type = "ALL IN"})
     end)
 
-    Buttons.Right.GUI.Text = "BET" .. " " .. bet
+    Buttons.Right.GUI.Text = "BET " .. bet .. " ★"
     setButtonCallback(Buttons.Right, function()
         Events.Match.Turn.Betting.Act:FireServer({Type = "BET", Amount = bet})
         bet = 10
@@ -187,7 +187,7 @@ buttonLayouts.Call = function()
         Events.Match.Turn.Betting.Act:FireServer({Type = "ALL IN"})
     end)
 
-    Buttons.Right.GUI.Text = "RAISE TO" .. " " .. actions.Last.Amount + bet
+    Buttons.Right.GUI.Text = "RAISE TO " .. actions.Last.Amount + bet .. " ★"
     setButtonCallback(Buttons.Right, function()
         Events.Match.Turn.Betting.Act:FireServer({Type = "RAISE", Amount = bet})
         bet = 10

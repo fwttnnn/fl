@@ -83,24 +83,17 @@ function Match:Start()
     turns:Push({Type = "BT"})
     turns:Push({Type = "SD"})
 
-    for _, p in ipairs(self.Table.Players) do
-        Billboard.Add(p.Player, Billboard.Types.Health)
-    end
-
     local winners = self:_Turn(turns)
     local draw = #winners > 1
 
-    for _, w in ipairs(winners) do
-        Billboard.Add(w.Player, Billboard.Types.Winner, draw)
-    end
     for _, p in ipairs(self.Table.Players) do
         Billboard.Remove(p.Player, Billboard.Types.Action)
     end
+    for _, w in ipairs(winners) do
+        Billboard.Add(w.Player, Billboard.Types.Winner, draw)
+    end
 
     task.wait(5)
-    for _, p in ipairs(self.Table.Players) do
-        Billboard.Remove(p.Player, Billboard.Types.Health)
-    end
     for _, w in ipairs(winners) do
         Billboard.Remove(w.Player, Billboard.Types.Winner)
     end
@@ -451,7 +444,6 @@ function Match:_TurnBetting()
             continue
         end
 
-        Billboard.Update(_player.Player, Billboard.Types.Health, _player.Health)
         Billboard.Remove(_player.Player, Billboard.Types.Timer)
         Billboard.Add(_player.Player, Billboard.Types.Action, lastAction)
 

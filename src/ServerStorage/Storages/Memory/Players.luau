@@ -8,6 +8,7 @@ local ServerStorage = game:GetService("ServerStorage")
 local Storages = {
     Global = {
         House = require(ServerStorage:WaitForChild("Storages").Global.House),
+        Stars = require(ServerStorage:WaitForChild("Storages").Global.Stars),
     },
 }
 
@@ -44,6 +45,7 @@ function Storage.Load(player: Player, reload: boolean)
 
     Storage[player.UserId] = {
         House = Storages.Global.House.Get(player),
+        Stars = Storages.Global.Stars.Get(player),
         Icon = url,
     }
 
