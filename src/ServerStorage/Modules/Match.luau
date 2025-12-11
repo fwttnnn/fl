@@ -254,6 +254,23 @@ function Match:_TurnBetting()
         local _player = queue:Pop()
         if not _player.Status["Alive"] then continue end
 
+        -- NOTE: should jump into showdown
+        if isEveryoneExceptOneFolded() then
+            self.State = "Everyone Folded"
+            return
+        end
+
+        if isEveryoneAllIn() then
+            self.State = "Everyone All In"
+            return
+        end
+
+        if isEveryoneExceptOneAlive() then
+            -- idk, should go off
+            self.State = "Everyone Except One Alive"
+            return
+        end
+
         local actionHandlers = {
             BET = function(action)
                 local amount = action.Amount
