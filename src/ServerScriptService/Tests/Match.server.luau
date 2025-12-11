@@ -82,14 +82,8 @@ function Test.TableDealToPlayers()
     match.Table:Deal(_p2)
 end
 
-function Test.BillboardAction()
-    -- Billboard.Add(me, Billboard.Types.Action, { Type = "CHECK", Amount = nil })
-end
-
 function Test.BillboardNew()
     print(Billboard.Root(me))
-    -- Billboard.Add(me, Billboard.Types.Stars)
-    -- Billboard.Add(me, Billboard.Types.Action, { Type = "CHECK", Amount = nil })
 end
 
 function Test.All()
@@ -97,8 +91,6 @@ function Test.All()
     -- Test.IDontKnow()
     -- Test.TableDealToCommunity()
     -- Test.TableDealToPlayers()
-    -- Test.BillboardHealth()
-    -- Test.BillboardAction()
     -- Test.BillboardNew()
 end
 

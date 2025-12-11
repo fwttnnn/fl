@@ -22,20 +22,20 @@ function Stars.Get(player: Player)
     return stars
 end
 
-function Stars.Add(player: Player, n: number): boolean
+function Stars.Gain(player: Player, n: number): boolean
     local success = pcall(function()
-        StarsStore:UpdateAsync(player.UserId, function(stars)
+        Stores.Stars:UpdateAsync(player.UserId, function(stars)
             stars = stars or 0
-            return stars + n
+            return math.min(999, stars + n)
         end)
     end)
 
     return success
 end
 
-function Stars.Subtract(player: Player, n: number): boolean
+function Stars.Lose(player: Player, n: number): boolean
     local success = pcall(function()
-        StarsStore:UpdateAsync(player.UserId, function(stars)
+        Stores.Stars:UpdateAsync(player.UserId, function(stars)
             stars = stars or 0
             return math.max(0, stars - n)
         end)

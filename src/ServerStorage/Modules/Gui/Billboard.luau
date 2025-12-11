@@ -4,11 +4,6 @@
 local Billboard = {
     Types = {
         Stars = "Stars",
-        Action = "Action",
-        Timer = "Timer",
-        Winner = "Winner",
-        Health = "Health",
-
         Floating = "Floating",
     }
 }
@@ -156,6 +151,9 @@ end
 function Billboard.Set(player: Player, _type, text: string)
     local _types = {
         [Billboard.Types.Floating] = function()
+            Billboard.Wrapper(player):FindFirstChild(_type).Label.Text = text
+        end,
+        [Billboard.Types.Stars] = function()
             Billboard.Wrapper(player):FindFirstChild(_type).Label.Text = text
         end
     }

@@ -24,7 +24,7 @@ local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
-local health = 0
+local stars = 0
 local bet = 10
 local actions = {
     -- NOTE: action 'Fold' will never appear here.
@@ -120,32 +120,41 @@ local function _first_word(str: string): string
     return str 
 end
 
-local function _update_right_button()
-    Buttons.Right.GUI.Text = _first_word(Buttons.Right.GUI.Text) .. " " .. bet
-end
-
 setButtonCallback(Buttons.Arrows.Increase, function()
-    bet += 5
+    local _type = _first_word(Buttons.Right.GUI.Text)
+    local handlers = {
+        ["BET"] = function()
+            bet = math.min(bet + 10, stars)
+            Buttons.Right.GUI.Text = _type .. " " .. bet .. " ★"
+        end,
+        ["RAISE"] = function()
+            bet += 10
 
-    if bet > 100 then
-        bet = 100
-    end
+            if actions.Last.Amount + bet > stars then
+                bet = math.max(0, stars - actions.Last.Amount)
+            end
 
-    if bet > health then
-        bet = health
-    end
+            Buttons.Right.GUI.Text = _type .. " TO " .. actions.Last.Amount + bet .. " ★"
+        end,
+    }
 
-    _update_right_button()
+    handlers[_type]()
 end)
 
 setButtonCallback(Buttons.Arrows.Decrease, function()
-    bet -= 1
+    local _type = _first_word(Buttons.Right.GUI.Text)
+    local handlers = {
+        ["BET"] = function()
+            bet = math.max(bet - 5, 10)
+            Buttons.Right.GUI.Text = _type .. " " .. bet .. " ★"
+        end,
+        ["RAISE"] = function()
+            bet = math.max(bet - 5, 10)
+            Buttons.Right.GUI.Text = _type .. " TO " .. actions.Last.Amount + bet .. " ★"
+        end,
+    }
 
-    if bet < 0 then
-        bet = 0
-    end
-
-    _update_right_button()
+    handlers[_type]()
 end)
 
 -- NOTE: naming based on last action
@@ -212,22 +221,25 @@ buttonLayouts.Default()
 -- Events
 --
 
-Events.Match.Turn.Started.OnClientEvent:Connect(function(_health)
-    health = _health
+Events.Match.Turn.Started.OnClientEvent:Connect(function(_stars)
+    bet = 10
+    stars = _stars
     actions.Last = {
         Type = nil,
         Amount = nil,
     }
 end)
 
-Events.Match.Turn.Betting.Act.OnClientEvent:Connect(function(_health)
+Events.Match.Turn.Betting.Act.OnClientEvent:Connect(function(_stars)
     enableButtons()
-    health = _health
+    bet = 10
+    stars = _stars
 end)
 
-Events.Match.Turn.Betting.Acted.OnClientEvent:Connect(function(_health)
+Events.Match.Turn.Betting.Acted.OnClientEvent:Connect(function(_stars)
     disableButtons()
-    health = _health
+    bet = 10
+    stars = _stars
 end)
 
 Events.Match.Turn.Betting.Action.OnClientEvent:Connect(function(player, action)

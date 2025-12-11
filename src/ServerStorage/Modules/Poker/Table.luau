@@ -18,6 +18,7 @@ local Hand = require(Modules.Poker.Hand)
 local Storages = {
     Global = {
         House = require(ServerStorage:WaitForChild("Storages").Global.House),
+        Stars = require(ServerStorage:WaitForChild("Storages").Global.Stars),
     },
 }
 
@@ -35,7 +36,7 @@ function Table.new(players: {[number]: Player})
                 ["Folded"] = false,
                 ["All In"] = false,
             },
-            Health = 100,
+            Stars = Storages.Global.Stars.Get(player),
             Hand = Hand.new(), 
         })
     end
@@ -107,7 +108,7 @@ function Table:Add(player: Player)
         Player = player,
         -- TODO: make this an enum
         State = "Waiting",
-        Health = 100,
+        Stars = Storages.Global.Stars.Get(player),
         Hand = Hand.new(), 
     })
 end

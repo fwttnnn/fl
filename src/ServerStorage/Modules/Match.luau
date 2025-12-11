@@ -44,6 +44,9 @@ local Storages = {
     Memory = {
         Players = require(ServerStorage:WaitForChild("Storages").Memory.Players),
     },
+    Global = {
+        Stars = require(ServerStorage:WaitForChild("Storages").Global.Stars),
+    },
 }
 
 function Match.new(players: {[number]: Player})
@@ -69,9 +72,6 @@ function Match.new(players: {[number]: Player})
 end
 
 function Match:Start()
-    -- cannot happen, but idk..
-    if #self.Table.Players <= 1 then return end
-
     local turns = Queue.new()
     turns:Push({Type = "DP"})
     turns:Push({Type = "BT"})
@@ -88,7 +88,11 @@ function Match:Start()
 
     local players = self.Table.Players
     for _, p in ipairs(players) do Billboard.Set(p.Player, Billboard.Types.Floating, "") end
-    for _, w in ipairs(winners) do Billboard.Set(w.Player, Billboard.Types.Floating, draw and "DRAW" or "WINNER") end
+    for _, w in ipairs(winners) do
+        Storages.Global.Stars.Gain(w.Player, self.Table.Pot / #winners)
+        Billboard.Set(w.Player, Billboard.Types.Floating, draw and "DRAW" or "WINNER")
+        Billboard.Set(w.Player, Billboard.Types.Stars, Storages.Global.Stars.Get(w.Player) .. " ★")
+    end
 
     task.wait(5)
     for _, w in ipairs(winners) do Billboard.Set(w.Player, Billboard.Types.Floating, "") end
@@ -98,7 +102,7 @@ function Match:_Turn(turns: Queue): {[number]: Player}
     local winners = {}
 
     for _, p in ipairs(self.Table.Players) do
-        Events.Match.Turn.Started:FireClient(p.Player, p.Health)
+        Events.Match.Turn.Started:FireClient(p.Player, p.Stars)
     end
 
     while not turns:IsEmpty() do
@@ -164,9 +168,9 @@ function Match:_TurnPlayerDealing()
         local _player = queue:Pop()
         assert(_player.Status["Alive"])
 
-        task.wait(1)
+        task.wait(0.55)
         self.Table:Deal(_player.Player)
-        task.wait(1)
+        task.wait(0.55)
         self.Table:Deal(_player.Player)
     end
 end
@@ -257,13 +261,14 @@ function Match:_TurnBetting()
                 if amount <= highestBet then return false end
                 if amount <= 0 then return false end
 
-                if _player.Health < amount then return false end
+                if _player.Stars < amount then return false end
 
                 highestBet = amount
-                _player.Health -= amount
+                _player.Stars -= amount
+                Storages.Global.Stars.Lose(_player.Player, amount)
                 self.Table.Pot += amount
 
-                if _player.Health <= 0 then
+                if _player.Stars <= 0 then
                     action.Type = "ALL IN"
 
                     _player.Status["Alive"] = false
@@ -276,7 +281,7 @@ function Match:_TurnBetting()
                 -- NOTE: rebuilding queue means a new betting round (then we reset everyone's action label?).
                 -- self:__RemoveAllPlayersActionBillboard()
 
-                print("[bet] pot increased", _player.Health, self.Table.Pot)
+                print("[bet] pot increased", _player.Stars, self.Table.Pot)
                 return true
             end,
 
@@ -286,28 +291,29 @@ function Match:_TurnBetting()
 
                 if lastAction.Type == "CHECK" then return false end
 
-                local amount = math.min(_player.Health, highestBet)
+                local amount = math.min(_player.Stars, highestBet)
                 if amount <= 0 then return false end
 
                 action.Amount = amount
-                _player.Health -= amount
+                _player.Stars -= amount
+                Storages.Global.Stars.Lose(_player.Player, amount)
                 self.Table.Pot += amount
 
-                if _player.Health <= 0 then
+                if _player.Stars <= 0 then
                     action.Type = "ALL IN"
 
                     _player.Status["Alive"] = false
                     _player.Status["All In"] = true
                 end
 
-                print("[call] pot increased", _player.Health, self.Table.Pot)
+                print("[call] pot increased", _player.Stars, self.Table.Pot)
                 return true
             end,
 
             CHECK = function(action)
                 if lastAction.Type and lastAction.Type ~= "CHECK" then return false end
 
-                print("[check] game continues", _player.Health, self.Table.Pot)
+                print("[check] game continues", _player.Stars, self.Table.Pot)
                 return true
             end,
 
@@ -315,7 +321,7 @@ function Match:_TurnBetting()
                 _player.Status["Alive"] = false
                 _player.Status["Folded"] = true
 
-                print("[fold] player out", _player.Health, self.Table.Pot)
+                print("[fold] player out", _player.Stars, self.Table.Pot)
                 return true
             end,
         }
@@ -324,11 +330,11 @@ function Match:_TurnBetting()
         actionHandlers["ALL IN"] = function(action)
             -- NOTE: we can just use BET, but it won't go through cuz
             --       we can't BET the same as `highestBet`.
-            if _player.Health <= highestBet then
+            if _player.Stars <= highestBet then
                 return actionHandlers["CALL"](action)
             end
 
-            action.Amount = _player.Health
+            action.Amount = _player.Stars
             return actionHandlers["BET"](action)
         end
 
@@ -347,6 +353,7 @@ function Match:_TurnBetting()
             },
         }
 
+        -- TODO: should we refund stars if disconnected? idk tho.. could be duplicated
         local function __disconnect()
             if connections.Act then               connections.Act:Disconnect() end
             if connections.Timer.Progression then connections.Timer.Progression:Disconnect() end
@@ -375,7 +382,6 @@ function Match:_TurnBetting()
             }
 
             acted:Fire()
-            Events.Match.Turn.Betting.Acted:FireClient(_player.Player, _player.Health)
         end)
         
         connections.Timer.Finished = self.Timer.Finished:Connect(function()
@@ -397,7 +403,6 @@ function Match:_TurnBetting()
             end
 
             acted:Fire()
-            Events.Match.Turn.Betting.Acted:FireClient(_player.Player, _player.Health)
         end)
 
         connections.Timer.Progression = self.Timer.Progression.Tick:Connect(function(sec: number)
@@ -417,15 +422,16 @@ function Match:_TurnBetting()
             __disconnect()
             continue
         end
-        Events.Match.Turn.Betting.Act:FireClient(_player.Player, _player.Health)
+        Events.Match.Turn.Betting.Act:FireClient(_player.Player, _player.Stars)
 
         self.Timer:Stop()
         self.Timer:Reset()
-        self.Timer:Start(20)
+        self.Timer:Start(21)
 
         -- NOTE: this blocks process.
         --       pass this event, the player should have acted.
         acted.Event:Wait()
+        Events.Match.Turn.Betting.Acted:FireClient(_player.Player, _player.Stars)
 
         self.Timer:Stop()
         self.Timer:Reset()
@@ -447,6 +453,7 @@ function Match:_TurnBetting()
             end
         end
         Billboard.Set(_player.Player, Billboard.Types.Floating, __labelText)
+        Billboard.Set(_player.Player, Billboard.Types.Stars, _player.Stars .. " ★")
 
         for _, p in ipairs(self.Table.Players) do
             if p.Id == _player.Id then continue end
