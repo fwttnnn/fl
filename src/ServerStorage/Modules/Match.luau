@@ -86,17 +86,12 @@ function Match:Start()
     local winners = self:_Turn(turns)
     local draw = #winners > 1
 
-    for _, p in ipairs(self.Table.Players) do
-        Billboard.Remove(p.Player, Billboard.Types.Action)
-    end
-    for _, w in ipairs(winners) do
-        Billboard.Add(w.Player, Billboard.Types.Winner, draw)
-    end
+    local players = self.Table.Players
+    for _, p in ipairs(players) do Billboard.Set(p.Player, Billboard.Types.Floating, "") end
+    for _, w in ipairs(winners) do Billboard.Set(w.Player, Billboard.Types.Floating, draw and "DRAW" or "WINNER") end
 
     task.wait(5)
-    for _, w in ipairs(winners) do
-        Billboard.Remove(w.Player, Billboard.Types.Winner)
-    end
+    for _, w in ipairs(winners) do Billboard.Set(w.Player, Billboard.Types.Floating, "") end
 end
 
 function Match:_Turn(turns: Queue): {[number]: Player}
@@ -245,7 +240,7 @@ function Match:_TurnBetting()
     end
 
     for _, _player in ipairs(self.Table.Players) do
-        Billboard.Remove(_player.Player, Billboard.Types.Action)
+        Billboard.Set(_player.Player, Billboard.Types.Floating, "")
 
         if not _player.Status["Alive"] then continue end
         Events.Match.Turn.Betting.Started:FireClient(_player.Player)
@@ -405,10 +400,7 @@ function Match:_TurnBetting()
             Events.Match.Turn.Betting.Acted:FireClient(_player.Player, _player.Health)
         end)
 
-        Billboard.Remove(_player.Player, Billboard.Types.Action)
-        Billboard.Add(_player.Player, Billboard.Types.Timer)
-
-        connections.Timer.Progression = self.Timer.Progression.Tick:Connect(function(progress: number)
+        connections.Timer.Progression = self.Timer.Progression.Tick:Connect(function(sec: number)
             if Native.Player.Disconnected(_player.Player) then
                 self.Timer:Stop()
                 self.Timer:Reset()
@@ -418,7 +410,7 @@ function Match:_TurnBetting()
                 return
             end
 
-            Billboard.Update(_player.Player, Billboard.Types.Timer, progress)
+            Billboard.Set(_player.Player, Billboard.Types.Floating, sec .. "s left")
         end)
 
         if Native.Player.Disconnected(_player.Player) then
@@ -444,8 +436,17 @@ function Match:_TurnBetting()
             continue
         end
 
-        Billboard.Remove(_player.Player, Billboard.Types.Timer)
-        Billboard.Add(_player.Player, Billboard.Types.Action, lastAction)
+        -- NOTE: set action text to billboard
+        local __labelText = lastAction.Type
+        if lastAction.Type ~= "ALL IN" then
+            if lastAction.Type == "BET" then
+                __labelText = lastAction.Type .. " " .. lastAction.Amount .. " ★"
+            end
+            if lastAction.Type == "RAISE" then
+                __labelText = lastAction.Type .. " TO " .. lastAction.Amount .. " ★"
+            end
+        end
+        Billboard.Set(_player.Player, Billboard.Types.Floating, __labelText)
 
         for _, p in ipairs(self.Table.Players) do
             if p.Id == _player.Id then continue end

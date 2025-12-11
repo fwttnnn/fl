@@ -83,12 +83,12 @@ function Test.TableDealToPlayers()
 end
 
 function Test.BillboardAction()
-    Billboard.Add(me, Billboard.Types.Action, { Type = "CHECK", Amount = nil })
+    -- Billboard.Add(me, Billboard.Types.Action, { Type = "CHECK", Amount = nil })
 end
 
 function Test.BillboardNew()
     print(Billboard.Root(me))
-    Billboard.Add(me, Billboard.Types.Stars)
+    -- Billboard.Add(me, Billboard.Types.Stars)
     -- Billboard.Add(me, Billboard.Types.Action, { Type = "CHECK", Amount = nil })
 end
 
@@ -99,7 +99,7 @@ function Test.All()
     -- Test.TableDealToPlayers()
     -- Test.BillboardHealth()
     -- Test.BillboardAction()
-    Test.BillboardNew()
+    -- Test.BillboardNew()
 end
 
 Test.All()
