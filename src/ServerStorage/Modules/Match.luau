@@ -282,7 +282,7 @@ function Match:_TurnBetting()
 
                 highestBet = amount
                 _player.Stars -= amount
-                Storages.Global.Stars.Lose(_player.Player, amount)
+                task.spawn(function() Storages.Global.Stars.Lose(_player.Player, amount) end)
                 self.Table.Pot += amount
 
                 if _player.Stars <= 0 then
@@ -313,7 +313,7 @@ function Match:_TurnBetting()
 
                 action.Amount = amount
                 _player.Stars -= amount
-                Storages.Global.Stars.Lose(_player.Player, amount)
+                task.spawn(function() Storages.Global.Stars.Lose(_player.Player, amount) end)
                 self.Table.Pot += amount
 
                 if _player.Stars <= 0 then
