@@ -19,6 +19,8 @@ local house = Functions.House.Get:InvokeServer()
 
 -- TODO: investigate on why this ran twice (print)
 TextChatService.OnIncomingMessage = function(message: TextChatMessage)
+    if not message.TextSource then return end
+
     local player = Players:GetPlayerByUserId(message.TextSource.UserId)
     if not player then return end
 
