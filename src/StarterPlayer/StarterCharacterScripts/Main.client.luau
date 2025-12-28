@@ -207,11 +207,22 @@ Events.Match.Started.OnClientEvent:Connect(function(players)
     PlayerGui.ScreenGui.Action.Visible = true
 
     for i, p in ipairs(players) do
-        -- TODO: rename GUI
+        -- TODO: rename `GUI`
         local GUI = ReplicatedStorage.GUI.Action.Player:Clone()
         GUI.Name = p.Player.UserId
         GUI.Player.Text = p.Player.DisplayName
         GUI.Health.Text = p.Health .. "H"
+
+        -- TODO: idk, this feels off
+        --       create a public fn?
+        local success, url = pcall(function()
+            local id = p.Player.UserId
+            return Players:GetUserThumbnailAsync(id,
+                                                 Enum.ThumbnailType.HeadShot,
+                                                 Enum.ThumbnailSize.Size420x420)
+        end)
+
+        GUI.Icon.Image.Image = url
         GUI.Parent = PlayerGui.ScreenGui.Action.Wrapper
     end
 end)

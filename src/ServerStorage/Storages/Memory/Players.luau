@@ -31,6 +31,7 @@ function Storage.Load(player: Player)
     local success, url = pcall(function()
         local id = player.UserId
         return Players:GetUserThumbnailAsync(id, -- 1531539874 
+                                                 -- rbxthumb://type=AvatarHeadShot&id=1531539874&w=420&h=420
                                              Enum.ThumbnailType.HeadShot,
                                              Enum.ThumbnailSize.Size420x420)
     end)
