@@ -7,7 +7,8 @@ local ServerStorage = game:GetService("ServerStorage")
 
 local Storages = {
     Global = {
-        House = require(ServerStorage:WaitForChild("Storages").Global.House),
+        House = require(ServerStorage.Storages.Global.House),
+        Hours = require(ServerStorage.Storages.Global.Hours),
     },
 }
 
@@ -42,8 +43,9 @@ function Storage.Load(player: Player)
     end
 
     Storage[player.UserId] = {
-        House = Storages.Global.House.Get(player),
         Icon  = url,
+        House = Storages.Global.House.Get(player),
+        Hours = Storages.Global.Hours.Get(player),
     }
 
     return Storage[player.UserId]

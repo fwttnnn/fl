@@ -13,8 +13,8 @@ local Table = require(Modules.Poker.Table)
 
 local Storages = {
     Memory = {
-        Matches = require(ServerStorage:WaitForChild("Storages").Memory.Matches),
-        Players = require(ServerStorage:WaitForChild("Storages").Memory.Players),
+        Matches = require(ServerStorage.Storages.Memory.Matches),
+        Players = require(ServerStorage.Storages.Memory.Players),
     },
 }
 
@@ -149,7 +149,20 @@ for _, t in ipairs(workspace.Tenants.Tables:GetChildren()) do
         -- NOTE: we start a new match from here
         --       branch off thread so the main thread won't be blocked by `match:Start()`
         task.spawn(function()
-            match = Match.new(players, t)
+            local entry  = 0
+            local casual = entry <= 0
+
+            -- NOTE: check if a player has enough hours to begin with.
+            if not casual then
+                for _, player in ipairs(players) do
+                    local hours = Storages.Global.Hours.Get(player)
+                    if hours < entry then return nil end
+
+                    Storages.Global.Hours.Lose(player, entry)
+                end
+            end
+
+            match = Match.new(players, entry, t)
             Storages.Memory.Matches.Add(match)
 
             match:Start()

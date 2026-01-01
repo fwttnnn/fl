@@ -17,8 +17,8 @@ local Card = require(Modules.Poker.Card)
 
 local Storages = {
     Memory = {
-        Matches = require(ServerStorage:WaitForChild("Storages").Memory.Matches),
-        Players = require(ServerStorage:WaitForChild("Storages").Memory.Players),
+        Matches = require(ServerStorage.Storages.Memory.Matches),
+        Players = require(ServerStorage.Storages.Memory.Players),
     },
 }
 

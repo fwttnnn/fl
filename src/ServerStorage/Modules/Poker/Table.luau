@@ -1,5 +1,8 @@
 --!strict
-local Table = {}
+local Table = {
+    PLAYERS_MIN = 2,
+    PLAYERS_MAX = 9,
+}
 Table.__index = Table
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -17,30 +20,32 @@ local Hand = require(Modules.Poker.Hand)
 
 local Storages = {
     Global = {
-        House = require(ServerStorage:WaitForChild("Storages").Global.House),
+        House = require(ServerStorage.Storages.Global.House),
     },
 }
 
-function Table.new(players: {[number]: Player}, part: Folder)
-    assert(#players >= 2, "are you 5?")
+function Table.new(players: {[number]: Player}, hours: number, part: Folder)
+    assert(#players >= Table.PLAYERS_MIN and #players <= Table.PLAYERS_MAX)
 
     local _players = {}
     for _, player in ipairs(players) do
         table.insert(_players, {
             Id = player.UserId,
             Player = player,
+
             -- TODO: make this an enum
             Status = {
                 ["Alive"]  = true,
                 ["Folded"] = false,
                 ["All In"] = false,
             },
-            Health = 100,
+
+            Hours = hours,
             Hand = Hand.new(), 
         })
     end
 
-    local deck = Deck.new(part)
+    local deck = Deck.new(part.Template.Deck)
     for _, suit: Folder in ipairs(Cards.Poker:GetChildren()) do
         for _, rank: Part in ipairs(suit:GetChildren()) do
             deck:Push(Card.new(rank.Name, suit.Name))
@@ -84,9 +89,9 @@ function Table.new(players: {[number]: Player}, part: Folder)
 
     return setmetatable({
         Part = part,
-        Players = _players,
         Deck = deck,
         Pot = 0,
+        Players = _players,
         Cards = {
             Community = Hand.new(),
             Burned = Hand.new(),
@@ -100,37 +105,13 @@ function Table:Destroy()
     self.Part.Community:Destroy()
 end
 
-function Table:Add(player: Player)
-    table.insert(self.Players, {
-        Id = player.UserId,
-        Player = player,
-        -- TODO: make this an enum
-        State = "Waiting",
-        Health = 100,
-        Hand = Hand.new(), 
-    })
-end
-
 function Table:Get(player: Player)
     return _table.find(self.Players, function(p)
         return p.Id == player.UserId
     end)
 end
 
-function Table:Index(player: Player)
-    return _table.index(self.Players, function(p)
-        return p.Id == player.UserId
-    end)
-end
-
-function Table:Remove(player: Player)
-    local index = self:Index(player)
-    if index <= 0 then return end
-
-    table.remove(self.Players, index)
-end
-
-function Table:Deal(player: Player?)
+function Table:Deal(player: Player)
     local dealings = {
         ["Community"] = function()
             local card: Card = self.Deck:Pop()
@@ -233,9 +214,8 @@ function Table:Deal(player: Player?)
             end)
         end,
         ["Player"] = function(player: Player)
-            local _player = self:Get(player)
-            local _index = self:Index(player)
-            local card = self.Deck:Pop()
+            local _player = _table.find(self.Players, function(p) return p.Id == player.UserId end)
+            local _index = _table.index(self.Players, function(p) return p.Id == player.UserId end)
 
             local line = self.Part.Template.Lines:FindFirstChild(tostring(_index))
             if not line then warn("cannot find line for", _index) end
@@ -266,17 +246,17 @@ function Table:Deal(player: Player?)
                 tweenT1:Play()
                 tweenT2:Play()
             end)
-
             workspace.Invisible.SFX.Card.Slide:Play()
+
+            local card = self.Deck:Pop()
             _player.Hand:Push(card)
         end,
     }
 
     if player then
-        dealings["Player"](player)
+        dealings["Player"](player, index)
         return
     end
-
     dealings["Community"]()
 end
 

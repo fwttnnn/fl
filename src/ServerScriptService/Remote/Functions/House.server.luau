@@ -4,7 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Storages = {
     Global = {
-        House = require(ServerStorage:WaitForChild("Storages").Global.House),
+        House = require(ServerStorage.Storages.Global.House),
     },
 }
 

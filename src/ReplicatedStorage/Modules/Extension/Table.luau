@@ -1,7 +1,7 @@
 --!strict
 local _table = {}
 
-function _table.filter(tbl: {any}, fn: (any) -> boolean): {any}
+function _table.filter<T>(tbl: {T}, fn: (T) -> boolean): {T}
     local result = {}
 
     for i, v in ipairs(tbl) do
@@ -13,7 +13,15 @@ function _table.filter(tbl: {any}, fn: (any) -> boolean): {any}
     return result
 end
 
-function _table.shift(tbl: {any}, n: number): {any}
+function _table.remove<T>(tbl: {T}, fn: (T) -> boolean): ()
+	for i = #tbl, 1, -1 do
+		if fn(tbl[i]) then
+			table.remove(tbl, i)
+		end
+	end
+end
+
+function _table.shift<T>(tbl: {T}, n: number): {T}
     n = n % #tbl  -- handles n > #tbl
     if n == 0 then return tbl end
 
@@ -42,7 +50,7 @@ function _table.shift(tbl: {any}, n: number): {any}
     return tbl
 end
 
-function _table.find(tbl: {any}, fn: (any) -> boolean): any
+function _table.find<T>(tbl: {T}, fn: (T) -> boolean): T
     for i, v in ipairs(tbl) do
         if fn(v) then
             return v
@@ -52,7 +60,7 @@ function _table.find(tbl: {any}, fn: (any) -> boolean): any
     return nil
 end
 
-function _table.index(tbl: {any}, fn: (any) -> boolean): number
+function _table.index<T>(tbl: {T}, fn: (T) -> boolean): number
     for i, v in ipairs(tbl) do
         if fn(v) then
             return i

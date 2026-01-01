@@ -1,5 +1,8 @@
 --!strict
-local Match = {}
+local Match = {
+    ENTRY_MIN = 100,
+    ENTRY_MAX = 5000,
+}
 Match.__index = Match
 
 local Players = game:GetService("Players")
@@ -21,25 +24,44 @@ local Events = ReplicatedStorage.Events
 
 local Storages = {
     Memory = {
-        Players = require(ServerStorage:WaitForChild("Storages").Memory.Players),
+        Players = require(ServerStorage.Storages.Memory.Players),
+    },
+    Global = {
+        Hours = require(ServerStorage.Storages.Global.Hours),
     },
 }
 
-function Match.new(players: {[number]: Player}, _table: Folder)
-    local match = setmetatable({
-        Table = Table.new(players, _table),
-        Timer = Timer.new(),
-        -- TODO: as enum.
-        State = "Going",
+local _table = require(ReplicatedStorage.Modules.Extension.Table)
 
-        -- NOTE: the last player to move.
-        __last = #players,
-        __conn = nil,
-    }, Match)
+function Match.new(players: {[number]: Player}, entry: number, tbl: Folder)
+    assert(#players >= Table.PLAYERS_MIN and #players <= Table.PLAYERS_MAX)
+    assert((entry   >= Match.ENTRY_MIN   and entry    <= Match.ENTRY_MAX) or
+           (entry <= 0))
 
-    -- NOTE(priority): when it's our turn, we can still bet and everything, so.. this is a thing to keep in mind.
-    match.__conn = Players.PlayerRemoving:Connect(function(player: Player)
-        match.Table:Remove(player)
+    local match = setmetatable({}, Match)
+
+    match.Entry  = entry
+    match.Casual = entry <= 0
+
+    local hours = match.Casual and
+                  Match.ENTRY_MIN or
+                  entry
+
+    match.Table = Table.new(_players, hours, tbl)
+    match.Timer = Timer.new()
+
+    -- TODO: as enum.
+    match.State = "Going"
+
+    -- NOTE: the last player to move.
+    match.Last = #_players
+
+    -- NOTE(priority): when it's our turn and someone disconnected, we can
+    --                 still bet and everything, so.. this is a thing to keep in mind.
+    match.Conn = Players.PlayerRemoving:Connect(function(player: Player)
+        _table.remove(match.Table.Players, function(p)
+            return p.Id == player.Id
+        end)
     end)
 
     return match
@@ -47,7 +69,7 @@ end
 
 function Match:Destroy()
     self.Table:Destroy()
-    self.__conn:Disconnect()
+    self.Conn:Disconnect()
 end
 
 function Match:Start()
@@ -69,9 +91,14 @@ function Match:Start()
     turns:Push({Type = "SD"})
 
     local winners = self:_Turn(turns)
+
     for _, p in ipairs(players) do
         Events.Match.Ended:FireClient(p.Player,
                                       winners)
+    end
+
+    for _, w in ipairs(winners) do
+        Storages.Global.Hours.Gain(w.Player, self.Table.Pot / #winners)
     end
 end
 
@@ -79,7 +106,7 @@ function Match:_Turn(turns: Queue): {[number]: Player}
     local winners = {}
 
     for _, p in ipairs(self.Table.Players) do
-        Events.Match.Turn.Started:FireClient(p.Player, p.Health)
+        Events.Match.Turn.Started:FireClient(p.Player, p.Hours)
     end
 
     while not turns:IsEmpty() do
@@ -106,7 +133,7 @@ function Match:_BuildQueue(): Queue
     local queue = Queue.new()
 
     for i = 1, #self.Table.Players do
-        local p = self.Table.Players[((self.__last + i - 1) % #self.Table.Players) + 1]
+        local p = self.Table.Players[((self.Last + i - 1) % #self.Table.Players) + 1]
         if not p.Status["Alive"] then continue end
 
         queue:Push(p)
@@ -118,7 +145,9 @@ end
 function Match:_RebuildQueue(from: Player): Queue
     local queue = Queue.new()
 
-    local playerIndex = self.Table:Index(from)
+    local playerIndex = _table.index(self.Table.Players, function(p)
+        return p.Id == from.UserId
+    end)
     assert(playerIndex > 0)
 
     for i = playerIndex + 1, #self.Table.Players do
@@ -246,13 +275,13 @@ function Match:_TurnBetting()
                 if amount <= highestBet then return false end
                 if amount <= 0 then return false end
 
-                if _player.Health < amount then return false end
+                if _player.Hours < amount then return false end
 
                 highestBet = amount
-                _player.Health -= amount
+                _player.Hours -= amount
                 self.Table.Pot += amount
 
-                if _player.Health <= 0 then
+                if _player.Hours <= 0 then
                     action.Type = "ALL IN"
 
                     _player.Status["Alive"] = false
@@ -262,10 +291,6 @@ function Match:_TurnBetting()
                 -- NOTE: if a player bets (will always be higher than `highestBet`), we go around.
                 queue = self:_RebuildQueue(_player.Player)
 
-                -- NOTE: rebuilding queue means a new betting round (then we reset everyone's action label?).
-                -- self:__RemoveAllPlayersActionBillboard()
-
-                print("[bet] pot increased", _player.Health, self.Table.Pot)
                 return true
             end,
 
@@ -275,28 +300,26 @@ function Match:_TurnBetting()
 
                 if lastAction.Type == "CHECK" then return false end
 
-                local amount = math.min(_player.Health, highestBet)
+                local amount = math.min(_player.Hours, highestBet)
                 if amount <= 0 then return false end
 
                 action.Amount = amount
-                _player.Health -= amount
+                _player.Hours -= amount
                 self.Table.Pot += amount
 
-                if _player.Health <= 0 then
+                if _player.Hours <= 0 then
                     action.Type = "ALL IN"
 
                     _player.Status["Alive"] = false
                     _player.Status["All In"] = true
                 end
 
-                print("[call] pot increased", _player.Health, self.Table.Pot)
                 return true
             end,
 
             CHECK = function(action)
                 if lastAction.Type and lastAction.Type ~= "CHECK" then return false end
 
-                print("[check] game continues", _player.Health, self.Table.Pot)
                 return true
             end,
 
@@ -304,7 +327,6 @@ function Match:_TurnBetting()
                 _player.Status["Alive"] = false
                 _player.Status["Folded"] = true
 
-                print("[fold] player out", _player.Health, self.Table.Pot)
                 return true
             end,
         }
@@ -313,11 +335,11 @@ function Match:_TurnBetting()
         actionHandlers["ALL IN"] = function(action)
             -- NOTE: we can just use BET, but it won't go through cuz
             --       we can't BET the same as `highestBet`.
-            if _player.Health <= highestBet then
+            if _player.Hours <= highestBet then
                 return actionHandlers["CALL"](action)
             end
 
-            action.Amount = _player.Health
+            action.Amount = _player.Hours
             return actionHandlers["BET"](action)
         end
 
@@ -407,7 +429,7 @@ function Match:_TurnBetting()
             __disconnect()
             continue
         end
-        Events.Match.Turn.Betting.Act:FireClient(_player.Player, _player.Health)
+        Events.Match.Turn.Betting.Act:FireClient(_player.Player, _player.Hours)
 
         self.Timer:Stop()
         self.Timer:Reset()
@@ -418,7 +440,7 @@ function Match:_TurnBetting()
         acted.Event:Wait()
         Events.Match.Turn.Betting.Acted:FireClient(_player.Player,
                                                    lastAction,
-                                                   _player.Health,
+                                                   _player.Hours,
                                                    self.Table.Pot)
 
         self.Timer:Stop()
@@ -436,12 +458,14 @@ function Match:_TurnBetting()
                                                         lastAction,
                                                         -- NOTE: a bit unorganized, but this is better than
                                                         --       firing multiple events
-                                                        _player.Health,
+                                                        _player.Hours,
                                                         self.Table.Pot)
         end
 
         __disconnect()
-        self.__last = self.Table:Index(_player.Player)
+        self.Last = _table.index(self.Table.Players, function(p)
+            return p.Id == _player.Player.UserId
+        end)
     end
 
     -- NOTE: should jump into showdown
