@@ -1,3 +1,4 @@
+--!strict
 local ServerStorage = game:GetService("ServerStorage")
 
 local Modules = ServerStorage:WaitForChild("Modules")

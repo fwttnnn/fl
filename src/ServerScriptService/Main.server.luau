@@ -25,7 +25,7 @@ Players.PlayerAdded:Connect(function(player)
     -- end)
 end)
 
-for _, t in ipairs(workspace.Development.Tables:GetChildren()) do
+for _, t in ipairs(workspace.Tenants.Tables:GetChildren()) do
     local function setModelTransparency(model, transparency)
         for _, part in ipairs(model:GetDescendants()) do
             if not (part:IsA("BasePart") or part:IsA("Decal")) then
