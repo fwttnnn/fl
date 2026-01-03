@@ -6,18 +6,22 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Objects = ReplicatedStorage:WaitForChild("Objects")
 local Cards = Objects.Cards
 
-function Deck.new(_template: Folder)
+function Deck.new(tbl: Folder)
     -- TODO(priority): this clones a card, we need the pos.
-    local part: Part = _template:Clone()
+    local part: Part = tbl.Template.Deck:Clone()
 
     part.Name = "Deck"
     part.CanQuery = true
-    part.Parent = _table
+    part.Parent = tbl
 
     return setmetatable({
         Part = part,
         Cards = {},
     }, Deck)
+end
+
+function Deck:Destroy()
+    self.Part:Destroy()
 end
 
 function Deck:IsEmpty(): boolean

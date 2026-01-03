@@ -31,7 +31,7 @@ function Hours.Gain(player: Player, n: number): boolean
     local success = pcall(function()
         Stores.Hours:UpdateAsync(player.UserId, function(hours)
             hours = hours or 0
-            return math.min(HOURS.MAX, hours + n)
+            return math.min(Hours.MAX, hours + n)
         end)
     end)
 

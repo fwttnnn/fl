@@ -45,7 +45,7 @@ function Table.new(players: {[number]: Player}, hours: number, part: Folder)
         })
     end
 
-    local deck = Deck.new(part.Template.Deck)
+    local deck = Deck.new(part)
     for _, suit: Folder in ipairs(Cards.Poker:GetChildren()) do
         for _, rank: Part in ipairs(suit:GetChildren()) do
             deck:Push(Card.new(rank.Name, suit.Name))
@@ -100,7 +100,7 @@ function Table.new(players: {[number]: Player}, hours: number, part: Folder)
 end
 
 function Table:Destroy()
-    self.Part.Deck:Destroy()
+    self.Deck:Destroy()
     self.Part.Community.Line:Destroy()
     self.Part.Community:Destroy()
 end

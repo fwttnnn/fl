@@ -47,20 +47,20 @@ function Match.new(players: {[number]: Player}, entry: number, tbl: Folder)
                   Match.ENTRY_MIN or
                   entry
 
-    match.Table = Table.new(_players, hours, tbl)
+    match.Table = Table.new(players, hours, tbl)
     match.Timer = Timer.new()
 
     -- TODO: as enum.
     match.State = "Going"
 
     -- NOTE: the last player to move.
-    match.Last = #_players
+    match.Last = #players
 
     -- NOTE(priority): when it's our turn and someone disconnected, we can
     --                 still bet and everything, so.. this is a thing to keep in mind.
     match.Conn = Players.PlayerRemoving:Connect(function(player: Player)
         _table.remove(match.Table.Players, function(p)
-            return p.Id == player.Id
+            return p.Id == player.UserId
         end)
     end)
 
