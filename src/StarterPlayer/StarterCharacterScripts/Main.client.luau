@@ -6,7 +6,7 @@ local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
-local hours = 0
+local health = 0
 local bet = 10
 local actions = {
     -- NOTE: action 'Fold' will never appear here.
@@ -106,14 +106,14 @@ setButtonCallback(Buttons.Arrows.Increase, function()
     local _type = _first_word(Buttons.Right.GUI.Text)
     local handlers = {
         ["BET"] = function()
-            bet = math.min(bet + 10, hours)
+            bet = math.min(bet + 10, health)
             Buttons.Right.GUI.Text = _type .. " " .. bet .. "H"
         end,
         ["RAISE"] = function()
             bet += 10
 
-            if actions.Last.Amount + bet > hours then
-                bet = math.max(0, hours - actions.Last.Amount)
+            if actions.Last.Amount + bet > health then
+                bet = math.max(0, health - actions.Last.Amount)
             end
 
             Buttons.Right.GUI.Text = _type .. " TO " .. actions.Last.Amount + bet .. "H"
@@ -211,7 +211,7 @@ Events.Match.Started.OnClientEvent:Connect(function(players)
         local GUI = ReplicatedStorage.GUI.Action.Player:Clone()
         GUI.Name = p.Player.UserId
         GUI.Player.Text = p.Player.DisplayName
-        GUI.Hours.Text = p.Hours .. "H"
+        GUI.Health.Text = p.Health .. "H"
 
         -- TODO: idk, this feels off
         --       create a public fn?
@@ -250,7 +250,7 @@ end)
 
 Events.Match.Turn.Started.OnClientEvent:Connect(function(_health)
     bet = 10
-    hours = _health
+    health = _health
     actions.Last = {
         Type = nil,
         Amount = nil,
@@ -260,16 +260,16 @@ end)
 Events.Match.Turn.Betting.Act.OnClientEvent:Connect(function(_health)
     enableButtons()
     bet = 10
-    hours = _health
+    health = _health
 end)
 
 Events.Match.Turn.Betting.Acted.OnClientEvent:Connect(function(action, _health, pot)
     disableButtons()
     bet = 10
-    hours = _health
+    health = _health
 
     PlayerGui.ScreenGui.Action.Pot.Label.Text = "POT: " .. pot .. "H"
-    PlayerGui.ScreenGui.Action.Wrapper:FindFirstChild(Player.UserId).Hours.Text = _health .. "H"
+    PlayerGui.ScreenGui.Action.Wrapper:FindFirstChild(Player.UserId).Health.Text = _health .. "H"
     PlayerGui.ScreenGui.Action.Wrapper:FindFirstChild(Player.UserId).Timer.Bar.Transparency = 1
 
     local labelText = action.Type
@@ -292,7 +292,7 @@ Events.Match.Turn.Betting.Action.OnClientEvent:Connect(function(player, action, 
     buttonLayouts[action.Type]()
 
     PlayerGui.ScreenGui.Action.Pot.Label.Text = "POT: " .. pot .. "H"
-    PlayerGui.ScreenGui.Action.Wrapper:FindFirstChild(player.UserId).Hours.Text = _health .. "H"
+    PlayerGui.ScreenGui.Action.Wrapper:FindFirstChild(player.UserId).Health.Text = _health .. "H"
     PlayerGui.ScreenGui.Action.Wrapper:FindFirstChild(player.UserId).Timer.Bar.Transparency = 1
 
     local labelText = action.Type

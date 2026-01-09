@@ -1,0 +1,37 @@
+done {} BAD LOGIC: CHECK THE VALUE OF USED CARDS FIRST. THEN IF IT'S STILL A DRAW, WE USE THE OVERALL VALUE OF THE HAND.
+todo {} UPON RAISING: GAME FLEES INTO NEXT TURN, WHICH SHOULDN'T
+extreme {} uh, we all in and bet and things
+
+A, 9, 8, 7, 5 = 39
+K, Q, J, 10, 5 = 39
+
+
+ADD task.spawn() ON EVERY SERVER EVENT --
+
+card draw
+https://create.roblox.com/store/asset/9119708437/Swish-Sweetener-12-SFX
+https://create.roblox.com/store/asset/9117206328/Paper-Crush-4-SFX
+https://create.roblox.com/store/asset/9119194959/Sleeve-Rip-7-SFX
+https://create.roblox.com/store/asset/4839809962/cardPlace2
+https://create.roblox.com/store/asset/128706455708345/CardsShuffle
+https://create.roblox.com/store/asset/9119708436/Swish-Sweetener-13-SFX
+https://create.roblox.com/store/asset/9118105573/Record-Sleeve-Pulled-Out-Back-In-32-SFX
+https://create.roblox.com/store/asset/9117207427/Paper-Cup-Grab-5-SFX
+https://create.roblox.com/store/asset/71787587486911/pageflip
+https://create.roblox.com/store/asset/111004454761624/GiftOpen-Pls-donate
+https://create.roblox.com/store/asset/9113668029/Camera-Bag-Items-2-SFX
+
+equip
+https://create.roblox.com/store/asset/8197579044/unequip
+https://create.roblox.com/store/asset/9118105244/Record-Sleeve-Pulled-Out-Back-In-30-SFX
+https://create.roblox.com/store/asset/9118106802/Record-Sleeve-Pulled-Out-Back-In-9-SFX
+https://create.roblox.com/store/asset/9118107443/Record-Sleeve-Pulled-Out-Back-In-16-SFX
+
+ui button
+https://create.roblox.com/store/asset/9117019901/Mouth-Pop-Thudding-Airy-Lip-Smacks-1-SFX
+https://create.roblox.com/store/asset/9113915409/Copier-Paper-29-SFX
+https://create.roblox.com/store/asset/76737395964087/eq
+
+https://create.roblox.com/store/asset/87519554692663/uisimplenegativeerror
+
+https://create.roblox.com/store/asset/80301239006039/jet-set-combo-done

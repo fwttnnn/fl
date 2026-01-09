@@ -24,7 +24,7 @@ local Storages = {
     },
 }
 
-function Table.new(players: {[number]: Player}, hours: number, part: Folder)
+function Table.new(players: {[number]: Player}, health: number, part: Folder)
     assert(#players >= Table.PLAYERS_MIN and #players <= Table.PLAYERS_MAX)
 
     local _players = {}
@@ -40,7 +40,7 @@ function Table.new(players: {[number]: Player}, hours: number, part: Folder)
                 ["All In"] = false,
             },
 
-            Hours = hours,
+            Health = health,
             Hand = Hand.new(), 
         })
     end

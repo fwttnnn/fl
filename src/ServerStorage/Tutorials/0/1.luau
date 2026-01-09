@@ -43,22 +43,22 @@ return {
 
         dialog("I'll show you where the skills are required, and where the luck comes in.")
 
-        dialog("Since i've got an ok hand, i'll bet some of my hours.")
+        dialog("Since i've got an ok hand, i'll bet some of my health.")
         dialog("You uh, just call.")
         match.Table.Pot += 10
-        match.Table:Get(counselor).Hours -= 10
+        match.Table:Get(counselor).Health -= 10
 
         conn = Events.Match.Turn.Betting.Act.OnServerEvent:Connect(function(p: Player, action)
             if p ~= player then return end
             if action.Type ~= "CALL" then return end
 
             match.Table.Pot += 10
-            match.Table:Get(p).Hours -= 10
+            match.Table:Get(p).Health -= 10
 
             lock:Fire()
         end)
 
-        Events.Match.Turn.Betting.Act:FireClient(player, match.Table:Get(player).Hours)
+        Events.Match.Turn.Betting.Act:FireClient(player, match.Table:Get(player).Health)
         lock.Event:Wait()
         conn:Disconnect()
 
@@ -73,19 +73,19 @@ return {
         match.Table:Deal()
 
         dialog("Here comes the flop, does your hand form a pair?")
-        dialog("I think you do, then bet some (10) hours.")
+        dialog("I think you do, then bet some (10) health.")
 
         conn = Events.Match.Turn.Betting.Act.OnServerEvent:Connect(function(p: Player, action)
             if p ~= player then return end
             if action.Type ~= "BET" and action.Amount ~= 10 then return end
 
             match.Table.Pot += 10
-            match.Table:Get(p).Hours -= 10
+            match.Table:Get(p).Health -= 10
 
             lock:Fire()
         end)
 
-        Events.Match.Turn.Betting.Act:FireClient(player, match.Table:Get(player).Hours)
+        Events.Match.Turn.Betting.Act:FireClient(player, match.Table:Get(player).Health)
         lock.Event:Wait()
         conn:Disconnect()
 
@@ -96,7 +96,7 @@ return {
 
         dialog("Well, i think i have the lead, i'll raise.")
         match.Table.Pot += (10 + 10)
-        match.Table:Get(counselor).Hours -= (10 + 10)
+        match.Table:Get(counselor).Health -= (10 + 10)
 
         dialog("You do have a good chance to hit a flush or another pair. Take your chances.")
         dialog("GO ALL IN.")
@@ -105,19 +105,19 @@ return {
             if p ~= player then return end
             if action.Type ~= "ALL IN" then return end
 
-            match.Table.Pot += match.Table:Get(p).Hours
-            match.Table:Get(p).Hours = 0
+            match.Table.Pot += match.Table:Get(p).Health
+            match.Table:Get(p).Health = 0
 
             lock:Fire()
         end)
 
-        Events.Match.Turn.Betting.Act:FireClient(player, match.Table:Get(player).Hours)
+        Events.Match.Turn.Betting.Act:FireClient(player, match.Table:Get(player).Health)
         lock.Event:Wait()
         conn:Disconnect()
 
         dialog("I call.")
-        match.Table.Pot += match.Table:Get(counselor).Hours
-        match.Table:Get(counselor).Hours = 0
+        match.Table.Pot += match.Table:Get(counselor).Health
+        match.Table:Get(counselor).Health = 0
 
         task.wait(0.65)
         match.Table.Cards.Community:Push(Card.new("2", "Diamonds"))
